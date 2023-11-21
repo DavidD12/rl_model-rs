@@ -1,6 +1,6 @@
 
 use crate::model::*;
-use super::*;
+use crate::parser::*;
 use line_col::LineColLookup;
 use std::time::Duration;
 

@@ -1,4 +1,9 @@
 use crate::model::Model;
+use crate::parser::error::*;
+use line_col::LineColLookup;
+use std::fs;
+
+lalrpop_mod!(grammar, "/parser/grammar.rs");
 
 pub struct Parser<'a> {
     current: Option<String>,
@@ -64,6 +69,30 @@ impl<'a> Parser<'a> {
             Some(file) => {
                 self.current = Some(file.clone());
                 Some(file)
+            }
+        }
+    }
+
+    pub fn parse(&mut self) -> Result<(), RlError> {
+        loop {
+            match self.next() {
+                None => return Ok(()),
+                Some(file) => match fs::read_to_string(&file) {
+                    Ok(input) => {
+                        let lookup = LineColLookup::new(&input);
+                        match grammar::ModelParser::new().parse(&lookup, self, &input) {
+                            Ok(_) => {}
+                            Err(e) => return Err(RlError::new_parse(&file, &lookup, e)),
+                        }
+                    }
+                    Err(e) => {
+                        let e = RlError::File {
+                            filename: file,
+                            message: format!("{:?}", e),
+                        };
+                        return Err(e);
+                    }
+                },
             }
         }
     }

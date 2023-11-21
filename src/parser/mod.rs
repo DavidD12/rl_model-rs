@@ -9,10 +9,6 @@ pub use position::*;
 
 use crate::model::*;
 
-use std::fs;
-
-lalrpop_mod!(grammar, "/parser/grammar.rs");
-
 use line_col::LineColLookup;
 
 #[derive(Debug)]
@@ -33,25 +29,5 @@ pub fn parse_file(model: &mut Model, file: &str) -> Result<(), RlError> {
     let mut parser = Parser::new(model);
     parser.add(file);
 
-    loop {
-        match parser.next() {
-            None => return Ok(()),
-            Some(file) => match fs::read_to_string(&file) {
-                Ok(input) => {
-                    let lookup = LineColLookup::new(&input);
-                    match grammar::ModelParser::new().parse(&lookup, &mut parser, &input) {
-                        Ok(_) => {}
-                        Err(e) => return Err(RlError::new_parse(&file, &lookup, e)),
-                    }
-                }
-                Err(e) => {
-                    let e = RlError::File {
-                        filename: file,
-                        message: format!("{:?}", e),
-                    };
-                    return Err(e);
-                }
-            },
-        }
-    }
+    parser.parse()
 }
