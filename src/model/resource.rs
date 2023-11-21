@@ -16,7 +16,7 @@ impl ResourceId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Resource {
     id: ResourceId,
     name: String,

@@ -9,7 +9,7 @@ impl Id for TypeId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RlType {
     id: TypeId,
     name: String,

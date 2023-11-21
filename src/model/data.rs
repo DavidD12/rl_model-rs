@@ -11,7 +11,7 @@ impl Id for DataId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Data {
     id: DataId,
     name: String,

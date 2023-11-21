@@ -10,7 +10,7 @@ impl Id for SkillsetId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Skillset {
     id: SkillsetId,
     name: String,

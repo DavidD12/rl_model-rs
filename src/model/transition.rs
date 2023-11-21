@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use super::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Transition {
     src: Reference<StateId>,
     dst: Reference<StateId>,
@@ -69,7 +69,7 @@ impl ToLang for Transition {
 
 //-------------------------------------------------- Transitions --------------------------------------------------
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Transitions {
     All,
     List(Vec<Transition>),

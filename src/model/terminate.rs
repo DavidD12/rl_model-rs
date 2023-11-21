@@ -25,7 +25,7 @@ impl TerminateId for FailureId {}
 pub type Success = Terminate<SuccessId>;
 pub type Failure = Terminate<FailureId>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Terminate<I: TerminateId> {
     id: I,
     name: String,

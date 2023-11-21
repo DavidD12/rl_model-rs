@@ -4,6 +4,7 @@ use line_col::LineColLookup;
 
 use crate::parser::Position;
 
+#[derive(Clone)]
 pub enum RlError {
     File {
         filename: String,

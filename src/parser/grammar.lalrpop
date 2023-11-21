@@ -4,7 +4,7 @@ use crate::parser::*;
 use line_col::LineColLookup;
 use std::time::Duration;
 
-grammar<'a>(lookup: &LineColLookup<'input>, parser: &mut Parser<'a>);
+grammar(lookup: &LineColLookup<'input>, parser: &mut Parser);
 
 match {
     r"\s*" => { }, // The default whitespace skipping is disabled an `ignore pattern` is specified

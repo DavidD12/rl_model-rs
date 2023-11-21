@@ -10,7 +10,7 @@ impl Id for InvariantId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Invariant {
     id: InvariantId,
     name: String,

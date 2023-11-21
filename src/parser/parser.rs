@@ -5,18 +5,19 @@ use std::fs;
 
 lalrpop_mod!(grammar, "/parser/grammar.rs");
 
-pub struct Parser<'a> {
+pub struct Parser {
     current: Option<String>,
     todo: Vec<String>,
     done: Vec<String>,
-    pub model: &'a mut Model,
+    pub model: Model,
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(model: &'a mut Model) -> Self {
+impl Parser {
+    pub fn new<S: Into<String>>(file: S) -> Self {
+        let model = Model::default();
         Self {
             current: None,
-            todo: vec![],
+            todo: vec![file.into()],
             done: vec![],
             model,
         }

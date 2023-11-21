@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::*;
 use crate::parser::RlError;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Model {
     types: Vec<RlType>,
     skillsets: Vec<Skillset>,

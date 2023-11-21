@@ -6,41 +6,36 @@ extern crate log;
 
 pub mod model;
 pub mod parser;
+use crate::model::Model;
 
-pub fn process_file(model: &mut model::Model, filename: &str) -> Result<(), parser::RlError> {
+pub fn load_model(filename: &str) -> Result<Model, parser::RlError> {
     // Parsing
-    match parser::parse_file(model, filename) {
-        Ok(_) => info!("Parsing OK"),
+    match parser::parse_file(filename) {
+        Ok(mut model) => {
+            info!("Parsing OK");
+            // Duplicate
+            match model.duplicate() {
+                Ok(_) => info!("Duplicate OK"),
+                Err(e) => {
+                    error!("{}", e);
+                    return Err(e);
+                }
+            }
+            // Resolve
+            match model.resolve() {
+                Ok(_) => info!("Resolve OK"),
+                Err(e) => {
+                    error!("{}", e);
+                    return Err(e);
+                }
+            }
+            //
+            Ok(model)
+        }
         Err(e) => {
             error!("{}", e);
             return Err(e);
         }
-    }
-    // Duplicate
-    match model.duplicate() {
-        Ok(_) => info!("Duplicate OK"),
-        Err(e) => {
-            error!("{}", e);
-            return Err(e);
-        }
-    }
-    // Resolve
-    match model.resolve() {
-        Ok(_) => info!("Resolve OK"),
-        Err(e) => {
-            error!("{}", e);
-            return Err(e);
-        }
-    }
-    //
-    Ok(())
-}
-
-pub fn load_model(file: &str) -> Result<model::Model, parser::RlError> {
-    let mut model = model::Model::default();
-    match process_file(&mut model, file) {
-        Ok(_) => Ok(model),
-        Err(e) => Err(e),
     }
 }
 

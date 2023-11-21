@@ -2,7 +2,7 @@ use super::*;
 use crate::parser::*;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     True,
     False,

@@ -10,7 +10,7 @@ impl Id for EventId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Event {
     id: EventId,
     name: String,

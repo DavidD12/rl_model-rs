@@ -9,7 +9,7 @@ impl Id for StateId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct State {
     id: StateId,
     name: String,

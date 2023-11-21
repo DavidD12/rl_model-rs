@@ -10,7 +10,7 @@ impl Id for PreconditionId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Precondition {
     id: PreconditionId,
     name: String,

@@ -2,7 +2,7 @@ use super::*;
 use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Interrupt {
     interrupting: bool,
     effects: Vec<Effect>,
