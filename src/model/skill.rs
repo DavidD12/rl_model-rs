@@ -10,6 +10,7 @@ impl Id for SkillId {
     }
 }
 
+#[derive(Debug)]
 pub struct Skill {
     id: SkillId,
     name: String,
@@ -385,12 +386,32 @@ impl Named<SkillId> for Skill {
     }
     fn set_id(&mut self, id: SkillId) {
         self.id = id;
+        for x in self.parameters.iter_mut() {
+            let SkillParameterId(_, index) = x.id();
+            x.set_id(SkillParameterId(id, index));
+        }
+        for x in self.preconditions.iter_mut() {
+            let PreconditionId(_, index) = x.id();
+            x.set_id(PreconditionId(id, index));
+        }
+        for x in self.invariants.iter_mut() {
+            let InvariantId(_, index) = x.id();
+            x.set_id(InvariantId(id, index));
+        }
+        for x in self.successes.iter_mut() {
+            let SuccessId(_, index) = x.id();
+            x.set_id(SuccessId(id, index));
+        }
+        for x in self.failures.iter_mut() {
+            let FailureId(_, index) = x.id();
+            x.set_id(FailureId(id, index));
+        }
     }
     fn name(&self) -> &str {
         &self.name
     }
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

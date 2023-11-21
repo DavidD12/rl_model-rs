@@ -25,6 +25,7 @@ impl TerminateId for FailureId {}
 pub type Success = Terminate<SuccessId>;
 pub type Failure = Terminate<FailureId>;
 
+#[derive(Debug)]
 pub struct Terminate<I: TerminateId> {
     id: I,
     name: String,
@@ -93,7 +94,7 @@ impl Named<SuccessId> for Success {
         &self.name
     }
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 impl Named<FailureId> for Failure {
@@ -107,7 +108,7 @@ impl Named<FailureId> for Failure {
         &self.name
     }
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 impl<I: TerminateId> ToLang for Terminate<I> {

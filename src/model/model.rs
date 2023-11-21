@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::*;
 use crate::parser::RlError;
 
+#[derive(Debug)]
 pub struct Model {
     types: Vec<RlType>,
     skillsets: Vec<Skillset>,
@@ -51,6 +52,11 @@ impl Model {
     pub fn get_skillset(&self, id: SkillsetId) -> Option<&Skillset> {
         let SkillsetId(index) = id;
         self.skillsets.get(index)
+    }
+
+    pub fn get_skillset_mut(&mut self, id: SkillsetId) -> Option<&mut Skillset> {
+        let SkillsetId(index) = id;
+        self.skillsets.get_mut(index)
     }
 
     //---------- Duplicate ----------

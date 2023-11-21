@@ -2,7 +2,7 @@ use super::*;
 use crate::parser::Position;
 use std::collections::HashMap;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum Reference<I: Id> {
     Unresolved(String, Option<Position>),
     Resolved(I),
@@ -22,7 +22,7 @@ impl<I: Id> Reference<I> {
                 Some(id) => Ok(Self::Resolved(*id)),
                 None => Err(RlError::Resolve {
                     element: format!("{} '{}'", info, name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(self.clone()),

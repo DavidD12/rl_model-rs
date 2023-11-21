@@ -1,3 +1,4 @@
+type T
 
 skillset S {
 
@@ -9,8 +10,10 @@ skillset S {
         }
     }
 
+/*
     event E {
         guard R==On
         effect R -> Off
     }
+*/
 }

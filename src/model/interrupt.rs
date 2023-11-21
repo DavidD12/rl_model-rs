@@ -2,6 +2,7 @@ use super::*;
 use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Interrupt {
     interrupting: bool,
     effects: Vec<Effect>,
@@ -37,7 +38,7 @@ impl Interrupt {
     }
 
     pub fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 
     //---------- Resolve ----------

@@ -8,8 +8,9 @@ pub mod model;
 pub mod parser;
 
 pub fn process_file(model: &mut model::Model, filename: &str) -> Result<(), parser::RlError> {
+    let mut parser = parser::Parser::new(model);
     // Parsing
-    match parser::parse_model_file(model, filename) {
+    match parser::parse_file(model, filename) {
         Ok(_) => info!("Parsing OK"),
         Err(e) => {
             error!("{}", e);

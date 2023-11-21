@@ -88,8 +88,8 @@ pub fn check_duplicate(names: Vec<Naming>) -> Result<(), RlError> {
             if n1 == n2 {
                 return Err(RlError::Duplicate {
                     name: n1.clone(),
-                    first: *p1,
-                    second: *p2,
+                    first: p1.clone(),
+                    second: p2.clone(),
                 });
             }
         }

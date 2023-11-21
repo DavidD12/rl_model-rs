@@ -2,6 +2,7 @@ use super::*;
 use crate::parser::*;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Effect {
     resource: Reference<ResourceId>,
     state: Reference<StateId>,
@@ -31,7 +32,7 @@ impl Effect {
                 }
                 None => Err(RlError::Resolve {
                     element: format!("resource '{}'", name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(()),
@@ -47,7 +48,7 @@ impl Effect {
                 }
                 None => Err(RlError::Resolve {
                     element: format!("resource '{}'", name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(()),

@@ -10,6 +10,7 @@ impl Id for PreconditionId {
     }
 }
 
+#[derive(Debug)]
 pub struct Precondition {
     id: PreconditionId,
     name: String,
@@ -58,7 +59,7 @@ impl Named<PreconditionId> for Precondition {
     }
 
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

@@ -2,6 +2,7 @@ use super::*;
 use crate::parser::*;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub enum Expr {
     True,
     False,
@@ -26,7 +27,7 @@ impl Expr {
                     }
                     None => Err(RlError::Resolve {
                         element: format!("resource '{}'", name),
-                        position: *pos,
+                        position: pos.clone(),
                     }),
                 },
                 Reference::Resolved(_) => Ok(()),
@@ -39,7 +40,7 @@ impl Expr {
                     }
                     None => Err(RlError::Resolve {
                         element: format!("resource '{}'", name),
-                        position: *pos,
+                        position: pos.clone(),
                     }),
                 },
                 Reference::Resolved(_) => Ok(()),
@@ -72,7 +73,7 @@ impl Expr {
                     }
                     None => Err(RlError::Resolve {
                         element: format!("state '{}'", name),
-                        position: *pos,
+                        position: pos.clone(),
                     }),
                 },
                 Reference::Resolved(_) => Ok(()),
@@ -85,7 +86,7 @@ impl Expr {
                     }
                     None => Err(RlError::Resolve {
                         element: format!("state '{}'", name),
-                        position: *pos,
+                        position: pos.clone(),
                     }),
                 },
                 Reference::Resolved(_) => Ok(()),

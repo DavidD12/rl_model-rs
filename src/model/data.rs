@@ -11,6 +11,7 @@ impl Id for DataId {
     }
 }
 
+#[derive(Debug)]
 pub struct Data {
     id: DataId,
     name: String,
@@ -60,7 +61,7 @@ impl Data {
                 }
                 None => Err(RlError::Resolve {
                     element: format!("type '{}'", name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(()),
@@ -82,7 +83,7 @@ impl Named<DataId> for Data {
     }
 
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

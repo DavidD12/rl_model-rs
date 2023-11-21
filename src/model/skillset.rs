@@ -10,6 +10,7 @@ impl Id for SkillsetId {
     }
 }
 
+#[derive(Debug)]
 pub struct Skillset {
     id: SkillsetId,
     name: String,
@@ -309,7 +310,7 @@ impl Named<SkillsetId> for Skillset {
         &self.name
     }
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

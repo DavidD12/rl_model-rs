@@ -1,3 +1,6 @@
+pub mod parser;
+pub use parser::*;
+
 pub mod error;
 pub use error::*;
 
@@ -19,33 +22,36 @@ pub struct Identifier {
 }
 
 impl Identifier {
-    pub fn new(lookup: &LineColLookup, name: &str, offset: usize) -> Self {
+    pub fn new(file: &str, lookup: &LineColLookup, name: &str, offset: usize) -> Self {
         let name = name.into();
-        let position = Position::new(lookup, offset);
+        let position = Position::new(file, lookup, offset);
         Self { name, position }
     }
 }
 
-pub fn parse_model_file(model: &mut Model, filename: &str) -> Result<(), RlError> {
-    match fs::read_to_string(filename) {
-        Ok(input) => {
-            parse_model(model, &input)?;
-            Ok(())
-        }
-        Err(e) => {
-            let e = RlError::File {
-                filename: filename.into(),
-                message: format!("{:?}", e),
-            };
-            Err(e)
-        }
-    }
-}
+pub fn parse_file(model: &mut Model, file: &str) -> Result<(), RlError> {
+    let mut parser = Parser::new(model);
+    parser.add(file);
 
-pub fn parse_model(model: &mut Model, input: &str) -> Result<(), RlError> {
-    let lookup = LineColLookup::new(input);
-    match grammar::ModelParser::new().parse(&lookup, model, input) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(RlError::new_parse(&lookup, e)),
+    loop {
+        match parser.next() {
+            None => return Ok(()),
+            Some(file) => match fs::read_to_string(&file) {
+                Ok(input) => {
+                    let lookup = LineColLookup::new(&input);
+                    match grammar::ModelParser::new().parse(&lookup, &mut parser, &input) {
+                        Ok(_) => {}
+                        Err(e) => return Err(RlError::new_parse(&file, &lookup, e)),
+                    }
+                }
+                Err(e) => {
+                    let e = RlError::File {
+                        filename: file,
+                        message: format!("{:?}", e),
+                    };
+                    return Err(e);
+                }
+            },
+        }
     }
 }

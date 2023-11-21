@@ -9,6 +9,7 @@ impl Id for TypeId {
     }
 }
 
+#[derive(Debug)]
 pub struct RlType {
     id: TypeId,
     name: String,
@@ -34,7 +35,7 @@ impl Named<TypeId> for RlType {
         &self.name
     }
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

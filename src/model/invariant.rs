@@ -10,6 +10,7 @@ impl Id for InvariantId {
     }
 }
 
+#[derive(Debug)]
 pub struct Invariant {
     id: InvariantId,
     name: String,
@@ -77,7 +78,7 @@ impl Named<InvariantId> for Invariant {
     }
 
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

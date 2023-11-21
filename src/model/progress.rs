@@ -3,6 +3,7 @@ use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 use std::time::Duration;
 
+#[derive(Debug)]
 pub struct Progress {
     period: Duration,
     message: Vec<Variable>,
@@ -27,7 +28,7 @@ impl Progress {
     }
 
     pub fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 
     //---------- Resolve ----------

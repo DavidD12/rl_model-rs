@@ -9,6 +9,7 @@ impl Id for StateId {
     }
 }
 
+#[derive(Debug)]
 pub struct State {
     id: StateId,
     name: String,
@@ -34,7 +35,7 @@ impl Named<StateId> for State {
         &self.name
     }
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

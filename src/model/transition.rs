@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 use super::*;
 
+#[derive(Debug)]
 pub struct Transition {
     src: Reference<StateId>,
     dst: Reference<StateId>,
@@ -37,7 +38,7 @@ impl Transition {
                 }
                 None => Err(RlError::Resolve {
                     element: format!("state '{}'", name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(()),
@@ -52,7 +53,7 @@ impl Transition {
                 }
                 None => Err(RlError::Resolve {
                     element: format!("state '{}'", name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(()),
@@ -68,6 +69,7 @@ impl ToLang for Transition {
 
 //-------------------------------------------------- Transitions --------------------------------------------------
 
+#[derive(Debug)]
 pub enum Transitions {
     All,
     List(Vec<Transition>),

@@ -10,6 +10,13 @@ impl Id for ResourceId {
     }
 }
 
+impl ResourceId {
+    pub fn skillset(&self) -> SkillsetId {
+        self.0
+    }
+}
+
+#[derive(Debug)]
 pub struct Resource {
     id: ResourceId,
     name: String,
@@ -114,7 +121,7 @@ impl Resource {
                 }
                 None => Err(RlError::Resolve {
                     element: format!("state '{}'", name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(()),
@@ -129,6 +136,10 @@ impl Named<ResourceId> for Resource {
 
     fn set_id(&mut self, id: ResourceId) {
         self.id = id;
+        for state in self.states.iter_mut() {
+            let StateId(_, index) = state.id();
+            state.set_id(StateId(id, index));
+        }
     }
 
     fn name(&self) -> &str {
@@ -136,7 +147,7 @@ impl Named<ResourceId> for Resource {
     }
 
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

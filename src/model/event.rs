@@ -10,6 +10,7 @@ impl Id for EventId {
     }
 }
 
+#[derive(Debug)]
 pub struct Event {
     id: EventId,
     name: String,
@@ -86,7 +87,7 @@ impl Named<EventId> for Event {
         &self.name
     }
     fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 }
 

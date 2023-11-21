@@ -2,6 +2,7 @@ use super::*;
 use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Variable {
     name: String,
     rl_type: Reference<TypeId>,
@@ -35,7 +36,7 @@ impl Variable {
     }
 
     pub fn position(&self) -> Option<Position> {
-        self.position
+        self.position.clone()
     }
 
     //---------- Resolve ----------
@@ -49,7 +50,7 @@ impl Variable {
                 }
                 None => Err(RlError::Resolve {
                     element: format!("type '{}'", name),
-                    position: *pos,
+                    position: pos.clone(),
                 }),
             },
             Reference::Resolved(_) => Ok(()),

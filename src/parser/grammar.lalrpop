@@ -4,7 +4,7 @@ use super::*;
 use line_col::LineColLookup;
 use std::time::Duration;
 
-grammar(lookup: &LineColLookup<'input>, model: &mut Model);
+grammar<'a>(lookup: &LineColLookup<'input>, parser: &mut Parser<'a>);
 
 match {
     r"\s*" => { }, // The default whitespace skipping is disabled an `ignore pattern` is specified
@@ -15,32 +15,35 @@ match {
 
 //------------------------- Model -------------------------
 
-pub Model: () = <types: Type> <skillsets: Skillset*> => {
-    for x in types {
-        model.add_type(x);
-    }
-    for x in skillsets {
-        model.add_skillset(x);
-    }
+pub Model: () = Entry* => {};
+
+//------------------------- Entry -------------------------
+
+Entry: () = {
+    Include,
+    TypeSingle,
+    TypeBlock,
+    Skillset,
+};
+
+//------------------------- Include -------------------------
+
+Include: () = "include" <file:String> => {
+    parser.add(file);
 };
 
 //------------------------- Type -------------------------
 
-Type: Vec<RlType> = {
-    <v: TypeSingle*> => v,
-    <v: TypeBlock> => v,
+TypeSingle: () = "type" <x:Identifier> => {
+    let x = RlType::new(x.name, Some(x.position));
+    parser.model.add_type(x);
 };
 
-TypeSingle: RlType = "type" <x:Identifier> => {
-    RlType::new(x.name, Some(x.position))
-};
-
-TypeBlock: Vec<RlType> = "type" "{" <l:(<Identifier>)*> "}" => {
-    let mut v = Vec::new();
+TypeBlock: () = "type" "{" <l:(<Identifier>)*> "}" => {
     for x in l {
-        v.push(RlType::new(x.name, Some(x.position)))
+        let x = RlType::new(x.name, Some(x.position));
+        parser.model.add_type(x);
     }
-    v
 };
 
 TypeRef: Reference<TypeId> = <x:Identifier> => {
@@ -49,14 +52,18 @@ TypeRef: Reference<TypeId> = <x:Identifier> => {
 
 //------------------------- Skillset -------------------------
 
-Skillset: Skillset = "skillset" <x:Identifier> "{" 
+Skillset: () = "skillset" <x:Identifier> "{" 
         <paramters:SkillsetParameter>
         <data:Data>
         <resources:Resource>
         <events:Event>
         <skills:Skill>
     "}" => {
+
     let mut skillset = Skillset::new(x.name, Some(x.position));
+    let id = parser.model.add_skillset(skillset);
+    let mut skillset = parser.model.get_skillset_mut(id).unwrap();
+
     for x in paramters {
         skillset.add_parameter(x);
     }
@@ -72,7 +79,7 @@ Skillset: Skillset = "skillset" <x:Identifier> "{"
     for x in skills {
         skillset.add_skill(x);
     }
-    skillset
+
 };
 
 //------------------------- Skillset Parameter -------------------------
@@ -185,6 +192,7 @@ SkillDef: Skill = <x:Identifier> "{"
     <fai:Failure>
     "}" => {
     let mut skill = Skill::new(x.name, Some(x.position));
+
     for x in par {
         skill.add_parameter(x);
     }
@@ -298,14 +306,14 @@ InvariantDef: Invariant = <n:Identifier> "{" "guard" <e:Expr> <o:Effects?> "}" =
 //------------------------- Interrupt -------------------------
 
 Interrupt: Interrupt = <l:@L>"interrupt" "{" "interrupting" <b:BoolValue> <e:Effects> <p:Postcondition?> "}" => {
-    let position = Position::new(lookup, l);
+    let position = Position::new(parser.file(), lookup, l);
     Interrupt::new(b, e, p, Some(position))
 };
 
 //------------------------- Progress -------------------------
 
 Progress: Progress = <l:@L>"progress" "{" <p:Period> <m:Message> "}" => {
-    let position = Position::new(lookup, l);
+    let position = Position::new(parser.file(), lookup, l);
     Progress::new(p, m, Some(position))
 };
 
@@ -418,6 +426,8 @@ Term: Expr = {
 
 //------------------------- Lexer -------------------------
 
+String: String = <s:r#"".+""#> => s[1..s.len()-1].to_string();
+
 Duration: Duration = {
     <i:UInteger> "sec" => Duration::from_secs(i),
     <i:UInteger> "ms" => Duration::from_millis(i),
@@ -428,5 +438,5 @@ Period: Duration = "period" <p:Duration> => p;
 UInteger: u64 = <i:r"[0-9]+"> => i.parse::<u64>().unwrap();
 
 Identifier: Identifier = <l:@L> <s:r"[a-zA-Z_][a-zA-Z_0-9]*"> <r:@R> => {
-    Identifier::new(lookup, s, l)
+    Identifier::new(parser.file(), lookup, s, l)
 };
