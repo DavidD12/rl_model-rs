@@ -60,9 +60,9 @@ Skillset: () = "skillset" <x:Identifier> "{"
         <skills:Skill>
     "}" => {
 
-    let mut skillset = Skillset::new(x.name, Some(x.position));
+    let skillset = Skillset::new(x.name, Some(x.position));
     let id = parser.model.add_skillset(skillset);
-    let mut skillset = parser.model.get_skillset_mut(id).unwrap();
+    let skillset = parser.model.get_skillset_mut(id).unwrap();
 
     for x in paramters {
         skillset.add_parameter(x);
@@ -191,6 +191,7 @@ SkillDef: Skill = <x:Identifier> "{"
     <suc:Success>
     <fai:Failure>
     "}" => {
+
     let mut skill = Skill::new(x.name, Some(x.position));
 
     for x in par {
