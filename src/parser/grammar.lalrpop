@@ -1,0 +1,432 @@
+
+use crate::model::*;
+use super::*;
+use line_col::LineColLookup;
+use std::time::Duration;
+
+grammar(lookup: &LineColLookup<'input>, model: &mut Model);
+
+match {
+    r"\s*" => { }, // The default whitespace skipping is disabled an `ignore pattern` is specified
+    r"//[^\n\r]*[\n\r]*" => { }, // Skip `// comments`
+    r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" => { },  // Skip `/* comments */`
+    _
+}
+
+//------------------------- Model -------------------------
+
+pub Model: () = <types: Type> <skillsets: Skillset*> => {
+    for x in types {
+        model.add_type(x);
+    }
+    for x in skillsets {
+        model.add_skillset(x);
+    }
+};
+
+//------------------------- Type -------------------------
+
+Type: Vec<RlType> = {
+    <v: TypeSingle*> => v,
+    <v: TypeBlock> => v,
+};
+
+TypeSingle: RlType = "type" <x:Identifier> => {
+    RlType::empty(x.name, Some(x.position))
+};
+
+TypeBlock: Vec<RlType> = "type" "{" <l:(<Identifier>)*> "}" => {
+    let mut v = Vec::new();
+    for x in l {
+        v.push(RlType::empty(x.name, Some(x.position)))
+    }
+    v
+};
+
+TypeRef: Reference<TypeId> = <x:Identifier> => {
+    Reference::Unresolved(x.name, Some(x.position))
+};
+
+//------------------------- Skillset -------------------------
+
+Skillset: Skillset = "skillset" <x:Identifier> "{" 
+        <paramters:SkillsetParameter>
+        <data:Data>
+        <resources:Resource>
+        <events:Event>
+        <skills:Skill>
+    "}" => {
+    let mut skillset = Skillset::empty(x.name, Some(x.position));
+    for x in paramters {
+        skillset.add_parameter(x);
+    }
+    for x in data {
+        skillset.add_data(x);
+    }
+    for x in resources {
+        skillset.add_resource(x);
+    }
+    for x in events {
+        skillset.add_event(x);
+    }
+    for x in skills {
+        skillset.add_skill(x);
+    }
+    skillset
+};
+
+//------------------------- Skillset Parameter -------------------------
+
+SkillsetParameter: Vec<SkillsetParameter> = {
+    <v: SkillsetParameterSingle*> => v,
+    <v: SkillsetParameterBlock> => v,
+};
+
+SkillsetParameterSingle: SkillsetParameter = "parameter" <v:Variable> => SkillsetParameter::empty(v);
+SkillsetParameterBlock: Vec<SkillsetParameter> = "parameter" "{" <l:Variable*> "}" => {
+    let mut v = Vec::new();
+    for x in l {
+        v.push(SkillsetParameter::empty(x));
+    }
+    v
+};
+
+//------------------------- Data -------------------------
+
+Data: Vec<Data> = {
+    <v: DataSingle*> => v,
+    <v: DataBlock> => v,
+};
+
+DataSingle: Data = "data" <d:DataDef> => d;
+DataBlock: Vec<Data> = "data" "{" <l:DataDef*> "}" => l;
+
+DataDef: Data = <x:Identifier> ":" <t:TypeRef> <p:Period?> => Data::empty(x.name, t, p, Some(x.position));
+
+//------------------------- Resource -------------------------
+
+Resource: Vec<Resource> = {
+    <v: ResourceSingle*> => v,
+    <v: ResourceBlock> => v,
+};
+
+ResourceSingle: Resource = "resource" <x:ResourceDef> => x;
+ResourceBlock: Vec<Resource> = "resource" "{" <l:ResourceDef*> "}" => l;
+
+ResourceDef: Resource = <x:Identifier> "{" <s:StateDef> <i:InitialDef> <t:Transitions> "}" => {
+    let mut resource = Resource::empty(x.name, Some(x.position));
+    for x in s {
+        resource.add_state(x);
+    }
+    resource.set_initial(i);
+    resource.set_transitions(t);
+    resource
+};
+
+ResourceRef: Reference<ResourceId> = <x:Identifier> => Reference::Unresolved(x.name, Some(x.position));
+
+//------------------------- State -------------------------
+
+StateDef: Vec<State> = "state" "{" <l:Identifier*> "}" => {
+    let mut v = Vec::new();
+    for x in l {
+        v.push(State::empty(x.name, Some(x.position)));
+    }
+    v
+};
+
+InitialDef: Reference<StateId> = "initial" <s:StateRef> => s;
+
+StateRef: Reference<StateId> = <x:Identifier> => Reference::Unresolved(x.name, Some(x.position));
+
+//------------------------- Transition -------------------------
+
+Transitions: Transitions = {
+    "transition" "all" => Transitions::All,
+    "transition" "{" <l:Transition*> "}" => Transitions::List(l),
+};
+
+Transition: Transition = <s:StateRef> "->" <d:StateRef> => Transition::new(s, d);
+
+//------------------------- Event -------------------------
+
+Event: Vec<Event> = {
+    <v: EventSingle*> => v,
+    <v: EventBlock> => v,
+};
+
+EventSingle: Event = "event" <e:EventDef> => e;
+EventBlock: Vec<Event> = "event" "{" <l:EventDef*> "}" => l;
+
+EventDef: Event = <x:Identifier> "{" <g:Guard?> <l:Effects> "}" => Event::empty(x.name, g, l, Some(x.position));
+
+Guard: Expr = "guard" <e:Expr> => e;
+
+//------------------------- Skill -------------------------
+
+Skill: Vec<Skill> = {
+    <v: SkillSingle*> => v,
+    <v: SkillBlock> => v,
+};
+
+SkillSingle: Skill = "skill" <s:SkillDef> => s;
+SkillBlock: Vec<Skill> = "skill" "{" <l:SkillDef*> "}" => l;
+
+SkillDef: Skill = <x:Identifier> "{" 
+    <par:SkillParameter>
+    <inp:Input>
+    <out:Output>
+    <pre:Precondition>
+    <sta:Start?>
+    <inv:Invariant>
+    <pro:Progress?>
+    <int:Interrupt?>
+    <suc:Success>
+    <fai:Failure>
+    "}" => {
+    let mut skill = Skill::empty(x.name, Some(x.position));
+    for x in par {
+        skill.add_parameter(x);
+    }
+    for x in inp {
+        skill.add_input(x);
+    }
+    for x in out {
+        skill.add_output(x);
+    }
+    for x in pre {
+        skill.add_precondition(x);
+    }
+    if let Some(e) = sta {
+        skill.set_start(e);
+    }
+    for x in inv {
+        skill.add_invariant(x);
+    }
+    if let Some(progress) = pro {
+        skill.set_progress(progress);
+    }
+    if let Some(i) = int {
+        skill.set_interrupt(i);
+    }
+    for x in suc {
+        skill.add_success(x);
+    }
+    for x in fai {
+        skill.add_failure(x);
+    }
+    //
+    skill
+};
+
+//------------------------- Skill Parameter -------------------------
+
+SkillParameter: Vec<SkillParameter> = {
+    <v: SkillParameterSingle*> => v,
+    <v: SkillParameterBlock> => v,
+};
+
+SkillParameterSingle: SkillParameter = "parameter" <v:Variable> => SkillParameter::empty(v);
+SkillParameterBlock: Vec<SkillParameter> = "parameter" "{" <l:Variable*> "}" => {
+    let mut v = Vec::new();
+    for x in l {
+        v.push(SkillParameter::empty(x));
+    }
+    v
+};
+
+//------------------------- Input -------------------------
+
+Input: Vec<Variable> = {
+    <v: InputSingle*> => v,
+    <v: InputBlock> => v,
+};
+
+InputSingle: Variable = "input" <v:Variable> => v;
+InputBlock: Vec<Variable> = "input" "{" <l:Variable*> "}" => l;
+
+//------------------------- Output -------------------------
+
+Output: Vec<Variable> = {
+    <v: OutputSingle*> => v,
+    <v: OutputBlock> => v,
+};
+
+OutputSingle: Variable = "output" <v:Variable> => v;
+OutputBlock: Vec<Variable> = "output" "{" <l:Variable*> "}" => l;
+
+//------------------------- Precondition -------------------------
+
+Precondition: Vec<Precondition> = {
+    <v: PreconditionSingle*> => v,
+    <v: PreconditionBlock> => v,
+};
+
+PreconditionSingle: Precondition = "precondition" <p:PreconditionDef> => p;
+PreconditionBlock: Vec<Precondition> = "precondition" "{" <l:PreconditionDef*> "}" => l;
+
+PreconditionDef: Precondition = <n:Identifier> ":" <e:Expr> => Precondition::empty(n.name, e, Some(n.position));
+
+//------------------------- Start -------------------------
+
+Start: Vec<Effect> = {
+    <v: StartSingle> => v,
+    <v: StartBlock> => v,
+};
+
+StartSingle: Vec<Effect> = "start"  <e:Effect> => vec![e];
+StartBlock: Vec<Effect> = "start" "{" <l:Effect*> "}" => l;
+
+//------------------------- Invariant -------------------------
+
+Invariant: Vec<Invariant> = {
+    <v: InvariantSingle*> => v,
+    <v: InvariantBlock> => v,
+};
+
+InvariantSingle: Invariant = "invariant" <i:InvariantDef> => i;
+InvariantBlock: Vec<Invariant> = "invariant" "{" <v:InvariantDef*> "}" => v;
+
+InvariantDef: Invariant = <n:Identifier> "{" "guard" <e:Expr> <o:Effects?> "}" => {
+    let l = match o {
+        Some(v) => v,
+        None => Vec::new(),
+    };
+    Invariant::empty(n.name, e, l, Some(n.position))
+};
+
+//------------------------- Interrupt -------------------------
+
+Interrupt: Interrupt = <l:@L>"interrupt" "{" "interrupting" <b:BoolValue> <e:Effects> <p:Postcondition?> "}" => {
+    let position = Position::new(lookup, l);
+    Interrupt::new(b, e, p, Some(position))
+};
+
+//------------------------- Progress -------------------------
+
+Progress: Progress = <l:@L>"progress" "{" <p:Period> <m:Message> "}" => {
+    let position = Position::new(lookup, l);
+    Progress::new(p, m, Some(position))
+};
+
+Message: Vec<Variable> = {
+    <v: MessageSingle*> => v,
+    <v: MessageBlock> => v,
+};
+
+MessageSingle: Variable = "message" <v:Variable> => v;
+MessageBlock: Vec<Variable> = "message" "{" <v:Variable*> "}" => v;
+
+//------------------------- Success -------------------------
+
+Success: Vec<Success> = {
+    <v: SuccessSingle*> => v,
+    <v: SuccessBlock> => v,
+};
+
+SuccessSingle: Success = "success" <i:SuccessDef> => i;
+SuccessBlock: Vec<Success> = "success" "{" <v:SuccessDef*> "}" => v;
+
+SuccessDef: Success = <n:Identifier> "{" <e:Effects?> <p:Postcondition?> "}" => {
+    let l = match e {
+        Some(v) => v,
+        None => Vec::new(),
+    };
+    Success::empty(n.name, l, p, Some(n.position))
+};
+
+//------------------------- Failure -------------------------
+
+Failure: Vec<Failure> = {
+    <v: FailureSingle*> => v,
+    <v: FailureBlock> => v,
+};
+
+FailureSingle: Failure = "failure" <i:FailureDef> => i;
+FailureBlock: Vec<Failure> = "failure" "{" <v:FailureDef*> "}" => v;
+
+FailureDef: Failure = <n:Identifier> "{" <e:Effects?> <p:Postcondition?> "}" => {
+    let l = match e {
+        Some(v) => v,
+        None => Vec::new(),
+    };
+    Failure::empty(n.name, l, p, Some(n.position))
+};
+
+//------------------------- Variable -------------------------
+
+Variable: Variable = <x:Identifier> ":" <t:TypeRef> => Variable::new(x.name, t, Some(x.position));
+
+//------------------------- Effect -------------------------
+
+Effects: Vec<Effect> = {
+    <v: EffectSingle> => v,
+    <v: EffectBlock> => v
+};
+
+EffectSingle: Vec<Effect> = "effect" <e:Effect> => vec![e];
+EffectBlock: Vec<Effect> = "effect" "{" <l:Effect*> "}" => l;
+
+Effect: Effect = <r:ResourceRef> "->" <s:StateRef> => Effect::new(r, s);
+
+//------------------------- Postcondition -------------------------
+
+Postcondition: Expr = "postcondition" <e:Expr> => e;
+
+//------------------------- BoolValue -------------------------
+
+BoolValue: bool = {
+    "false" => false,
+    "true" => true,
+};
+
+//------------------------- Expr -------------------------
+
+Expr: Expr = ImpliesExpr;
+ImpliesExpr: Expr = {
+    <left:ImpliesExpr> "=>" <right:OrExpr> => {
+        Expr::Implies(Box::new(left), Box::new(right))
+    },
+    OrExpr,
+};
+OrExpr: Expr = {
+    <left:OrExpr> "or" <right:AndExpr> => {
+        Expr::Or(Box::new(left), Box::new(right))
+    },
+    AndExpr,
+};
+AndExpr: Expr = {
+    <left:AndExpr> "and" <right:NotExpr> => {
+        Expr::And(Box::new(left), Box::new(right))
+    },
+    NotExpr,
+};
+NotExpr: Expr = {
+    "not" <e: NotExpr> => {
+        Expr::Not(Box::new(e))
+    },
+    Term,
+};
+
+Term: Expr = {
+    "false" => Expr::False,
+    "true" => Expr::True,
+    <r:ResourceRef> "==" <s:StateRef> => Expr::ResourceEq(r, s),
+    <r:ResourceRef> "!=" <s:StateRef> => Expr::ResourceNe(r, s),
+    "(" <Expr> ")",
+};
+
+//------------------------- Lexer -------------------------
+
+Duration: Duration = {
+    <i:UInteger> "sec" => Duration::from_secs(i),
+    <i:UInteger> "ms" => Duration::from_millis(i),
+};
+Period: Duration = "period" <p:Duration> => p;
+
+
+UInteger: u64 = <i:r"[0-9]+"> => i.parse::<u64>().unwrap();
+
+Identifier: Identifier = <l:@L> <s:r"[a-zA-Z_][a-zA-Z_0-9]*"> <r:@R> => {
+    Identifier::new(lookup, s, l)
+};

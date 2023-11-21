@@ -1,0 +1,2 @@
+type Float
+type Double
