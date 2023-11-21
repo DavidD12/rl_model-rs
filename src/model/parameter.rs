@@ -8,8 +8,8 @@ pub struct Parameter<I: Id> {
 }
 
 impl<I: Id> Parameter<I> {
-    pub fn empty(variable: Variable) -> Self {
-        let id = I::empty();
+    pub fn new(variable: Variable) -> Self {
+        let id = I::default();
         Self { id, variable }
     }
 
@@ -58,8 +58,8 @@ impl<I: Id> std::fmt::Display for Parameter<I> {
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct SkillsetParameterId(pub SkillsetId, pub usize);
 impl Id for SkillsetParameterId {
-    fn empty() -> Self {
-        Self(SkillsetId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillsetId::default(), 0)
     }
 }
 
@@ -70,8 +70,8 @@ pub type SkillsetParameter = Parameter<SkillsetParameterId>;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct SkillParameterId(pub SkillId, pub usize);
 impl Id for SkillParameterId {
-    fn empty() -> Self {
-        Self(SkillId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillId::default(), 0)
     }
 }
 

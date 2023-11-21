@@ -7,8 +7,8 @@ pub trait TerminateId: Id {}
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct SuccessId(pub SkillId, pub usize);
 impl Id for SuccessId {
-    fn empty() -> Self {
-        Self(SkillId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillId::default(), 0)
     }
 }
 impl TerminateId for SuccessId {}
@@ -16,8 +16,8 @@ impl TerminateId for SuccessId {}
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct FailureId(pub SkillId, pub usize);
 impl Id for FailureId {
-    fn empty() -> Self {
-        Self(SkillId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillId::default(), 0)
     }
 }
 impl TerminateId for FailureId {}
@@ -34,13 +34,13 @@ pub struct Terminate<I: TerminateId> {
 }
 
 impl<I: TerminateId> Terminate<I> {
-    pub fn empty<S: Into<String>>(
+    pub fn new<S: Into<String>>(
         name: S,
         effects: Vec<Effect>,
         postcondition: Option<Expr>,
         position: Option<Position>,
     ) -> Self {
-        let id = I::empty();
+        let id = I::default();
         let name = name.into();
         Self {
             id,

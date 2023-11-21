@@ -5,8 +5,8 @@ use std::collections::HashMap;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct PreconditionId(pub SkillId, pub usize);
 impl Id for PreconditionId {
-    fn empty() -> Self {
-        Self(SkillId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillId::default(), 0)
     }
 }
 
@@ -18,8 +18,8 @@ pub struct Precondition {
 }
 
 impl Precondition {
-    pub fn empty<S: Into<String>>(name: S, expr: Expr, position: Option<Position>) -> Self {
-        let id = PreconditionId::empty();
+    pub fn new<S: Into<String>>(name: S, expr: Expr, position: Option<Position>) -> Self {
+        let id = PreconditionId::default();
         let name = name.into();
         Self {
             id,

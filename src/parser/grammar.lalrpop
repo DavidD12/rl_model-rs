@@ -32,13 +32,13 @@ Type: Vec<RlType> = {
 };
 
 TypeSingle: RlType = "type" <x:Identifier> => {
-    RlType::empty(x.name, Some(x.position))
+    RlType::new(x.name, Some(x.position))
 };
 
 TypeBlock: Vec<RlType> = "type" "{" <l:(<Identifier>)*> "}" => {
     let mut v = Vec::new();
     for x in l {
-        v.push(RlType::empty(x.name, Some(x.position)))
+        v.push(RlType::new(x.name, Some(x.position)))
     }
     v
 };
@@ -56,7 +56,7 @@ Skillset: Skillset = "skillset" <x:Identifier> "{"
         <events:Event>
         <skills:Skill>
     "}" => {
-    let mut skillset = Skillset::empty(x.name, Some(x.position));
+    let mut skillset = Skillset::new(x.name, Some(x.position));
     for x in paramters {
         skillset.add_parameter(x);
     }
@@ -82,11 +82,11 @@ SkillsetParameter: Vec<SkillsetParameter> = {
     <v: SkillsetParameterBlock> => v,
 };
 
-SkillsetParameterSingle: SkillsetParameter = "parameter" <v:Variable> => SkillsetParameter::empty(v);
+SkillsetParameterSingle: SkillsetParameter = "parameter" <v:Variable> => SkillsetParameter::new(v);
 SkillsetParameterBlock: Vec<SkillsetParameter> = "parameter" "{" <l:Variable*> "}" => {
     let mut v = Vec::new();
     for x in l {
-        v.push(SkillsetParameter::empty(x));
+        v.push(SkillsetParameter::new(x));
     }
     v
 };
@@ -101,7 +101,7 @@ Data: Vec<Data> = {
 DataSingle: Data = "data" <d:DataDef> => d;
 DataBlock: Vec<Data> = "data" "{" <l:DataDef*> "}" => l;
 
-DataDef: Data = <x:Identifier> ":" <t:TypeRef> <p:Period?> => Data::empty(x.name, t, p, Some(x.position));
+DataDef: Data = <x:Identifier> ":" <t:TypeRef> <p:Period?> => Data::new(x.name, t, p, Some(x.position));
 
 //------------------------- Resource -------------------------
 
@@ -114,7 +114,7 @@ ResourceSingle: Resource = "resource" <x:ResourceDef> => x;
 ResourceBlock: Vec<Resource> = "resource" "{" <l:ResourceDef*> "}" => l;
 
 ResourceDef: Resource = <x:Identifier> "{" <s:StateDef> <i:InitialDef> <t:Transitions> "}" => {
-    let mut resource = Resource::empty(x.name, Some(x.position));
+    let mut resource = Resource::new(x.name, Some(x.position));
     for x in s {
         resource.add_state(x);
     }
@@ -130,7 +130,7 @@ ResourceRef: Reference<ResourceId> = <x:Identifier> => Reference::Unresolved(x.n
 StateDef: Vec<State> = "state" "{" <l:Identifier*> "}" => {
     let mut v = Vec::new();
     for x in l {
-        v.push(State::empty(x.name, Some(x.position)));
+        v.push(State::new(x.name, Some(x.position)));
     }
     v
 };
@@ -158,7 +158,7 @@ Event: Vec<Event> = {
 EventSingle: Event = "event" <e:EventDef> => e;
 EventBlock: Vec<Event> = "event" "{" <l:EventDef*> "}" => l;
 
-EventDef: Event = <x:Identifier> "{" <g:Guard?> <l:Effects> "}" => Event::empty(x.name, g, l, Some(x.position));
+EventDef: Event = <x:Identifier> "{" <g:Guard?> <l:Effects> "}" => Event::new(x.name, g, l, Some(x.position));
 
 Guard: Expr = "guard" <e:Expr> => e;
 
@@ -184,7 +184,7 @@ SkillDef: Skill = <x:Identifier> "{"
     <suc:Success>
     <fai:Failure>
     "}" => {
-    let mut skill = Skill::empty(x.name, Some(x.position));
+    let mut skill = Skill::new(x.name, Some(x.position));
     for x in par {
         skill.add_parameter(x);
     }
@@ -226,11 +226,11 @@ SkillParameter: Vec<SkillParameter> = {
     <v: SkillParameterBlock> => v,
 };
 
-SkillParameterSingle: SkillParameter = "parameter" <v:Variable> => SkillParameter::empty(v);
+SkillParameterSingle: SkillParameter = "parameter" <v:Variable> => SkillParameter::new(v);
 SkillParameterBlock: Vec<SkillParameter> = "parameter" "{" <l:Variable*> "}" => {
     let mut v = Vec::new();
     for x in l {
-        v.push(SkillParameter::empty(x));
+        v.push(SkillParameter::new(x));
     }
     v
 };
@@ -265,7 +265,7 @@ Precondition: Vec<Precondition> = {
 PreconditionSingle: Precondition = "precondition" <p:PreconditionDef> => p;
 PreconditionBlock: Vec<Precondition> = "precondition" "{" <l:PreconditionDef*> "}" => l;
 
-PreconditionDef: Precondition = <n:Identifier> ":" <e:Expr> => Precondition::empty(n.name, e, Some(n.position));
+PreconditionDef: Precondition = <n:Identifier> ":" <e:Expr> => Precondition::new(n.name, e, Some(n.position));
 
 //------------------------- Start -------------------------
 
@@ -292,7 +292,7 @@ InvariantDef: Invariant = <n:Identifier> "{" "guard" <e:Expr> <o:Effects?> "}" =
         Some(v) => v,
         None => Vec::new(),
     };
-    Invariant::empty(n.name, e, l, Some(n.position))
+    Invariant::new(n.name, e, l, Some(n.position))
 };
 
 //------------------------- Interrupt -------------------------
@@ -332,7 +332,7 @@ SuccessDef: Success = <n:Identifier> "{" <e:Effects?> <p:Postcondition?> "}" => 
         Some(v) => v,
         None => Vec::new(),
     };
-    Success::empty(n.name, l, p, Some(n.position))
+    Success::new(n.name, l, p, Some(n.position))
 };
 
 //------------------------- Failure -------------------------
@@ -350,7 +350,7 @@ FailureDef: Failure = <n:Identifier> "{" <e:Effects?> <p:Postcondition?> "}" => 
         Some(v) => v,
         None => Vec::new(),
     };
-    Failure::empty(n.name, l, p, Some(n.position))
+    Failure::new(n.name, l, p, Some(n.position))
 };
 
 //------------------------- Variable -------------------------

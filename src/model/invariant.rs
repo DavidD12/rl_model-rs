@@ -5,8 +5,8 @@ use std::collections::HashMap;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct InvariantId(pub SkillId, pub usize);
 impl Id for InvariantId {
-    fn empty() -> Self {
-        Self(SkillId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillId::default(), 0)
     }
 }
 
@@ -19,13 +19,13 @@ pub struct Invariant {
 }
 
 impl Invariant {
-    pub fn empty<S: Into<String>>(
+    pub fn new<S: Into<String>>(
         name: S,
         guard: Expr,
         effects: Vec<Effect>,
         position: Option<Position>,
     ) -> Self {
-        let id = InvariantId::empty();
+        let id = InvariantId::default();
         let name = name.into();
         Self {
             id,

@@ -4,7 +4,7 @@ use crate::parser::Position;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct TypeId(pub usize);
 impl Id for TypeId {
-    fn empty() -> Self {
+    fn default() -> Self {
         Self(0)
     }
 }
@@ -16,8 +16,8 @@ pub struct RlType {
 }
 
 impl RlType {
-    pub fn empty<S: Into<String>>(name: S, position: Option<Position>) -> Self {
-        let id = TypeId::empty();
+    pub fn new<S: Into<String>>(name: S, position: Option<Position>) -> Self {
+        let id = TypeId::default();
         let name = name.into();
         Self { id, name, position }
     }

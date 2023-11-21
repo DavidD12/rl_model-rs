@@ -5,7 +5,7 @@ use std::collections::HashMap;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct SkillsetId(pub usize);
 impl Id for SkillsetId {
-    fn empty() -> Self {
+    fn default() -> Self {
         Self(0)
     }
 }
@@ -22,8 +22,8 @@ pub struct Skillset {
 }
 
 impl Skillset {
-    pub fn empty<S: Into<String>>(name: S, position: Option<Position>) -> Self {
-        let id = SkillsetId::empty();
+    pub fn new<S: Into<String>>(name: S, position: Option<Position>) -> Self {
+        let id = SkillsetId::default();
         let name = name.into();
         Self {
             id,

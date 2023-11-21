@@ -61,7 +61,7 @@ pub trait ToLang {
 //------------------------- Id -------------------------
 
 pub trait Id: Clone + Copy + PartialEq + Eq + core::hash::Hash + std::fmt::Debug {
-    fn empty() -> Self;
+    fn default() -> Self;
 }
 
 pub trait GetFromId<I: Id, T> {

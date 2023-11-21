@@ -37,7 +37,7 @@ pub fn process_file(model: &mut model::Model, filename: &str) -> Result<(), pars
 }
 
 pub fn load_model(file: &str) -> Result<model::Model, parser::RlError> {
-    let mut model = model::Model::empty();
+    let mut model = model::Model::default();
     match process_file(&mut model, file) {
         Ok(_) => Ok(model),
         Err(e) => Err(e),

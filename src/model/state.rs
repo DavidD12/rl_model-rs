@@ -4,8 +4,8 @@ use crate::parser::Position;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct StateId(pub ResourceId, pub usize);
 impl Id for StateId {
-    fn empty() -> Self {
-        Self(ResourceId::empty(), 0)
+    fn default() -> Self {
+        Self(ResourceId::default(), 0)
     }
 }
 
@@ -16,8 +16,8 @@ pub struct State {
 }
 
 impl State {
-    pub fn empty<S: Into<String>>(name: S, position: Option<Position>) -> Self {
-        let id = StateId::empty();
+    pub fn new<S: Into<String>>(name: S, position: Option<Position>) -> Self {
+        let id = StateId::default();
         let name = name.into();
         Self { id, name, position }
     }

@@ -6,8 +6,8 @@ use std::time::Duration;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct DataId(pub SkillsetId, pub usize);
 impl Id for DataId {
-    fn empty() -> Self {
-        Self(SkillsetId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillsetId::default(), 0)
     }
 }
 
@@ -20,13 +20,13 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn empty<S: Into<String>>(
+    pub fn new<S: Into<String>>(
         name: S,
         rl_type: Reference<TypeId>,
         period: Option<Duration>,
         position: Option<Position>,
     ) -> Self {
-        let id = DataId::empty();
+        let id = DataId::default();
         let name = name.into();
         Self {
             id,

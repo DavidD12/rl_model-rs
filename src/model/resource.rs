@@ -5,8 +5,8 @@ use std::collections::HashMap;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct ResourceId(pub SkillsetId, pub usize);
 impl Id for ResourceId {
-    fn empty() -> Self {
-        Self(SkillsetId::empty(), 0)
+    fn default() -> Self {
+        Self(SkillsetId::default(), 0)
     }
 }
 
@@ -20,8 +20,8 @@ pub struct Resource {
 }
 
 impl Resource {
-    pub fn empty<S: Into<String>>(name: S, position: Option<Position>) -> Self {
-        let id = ResourceId::empty();
+    pub fn new<S: Into<String>>(name: S, position: Option<Position>) -> Self {
+        let id = ResourceId::default();
         let name = name.into();
         Self {
             id,

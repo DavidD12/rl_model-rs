@@ -9,13 +9,6 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn empty() -> Self {
-        Self {
-            types: Vec::new(),
-            skillsets: Vec::new(),
-        }
-    }
-
     //---------- Type ----------
 
     pub fn types(&self) -> &Vec<RlType> {
@@ -135,6 +128,15 @@ impl Model {
         }
         //
         s
+    }
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Self {
+            types: Vec::new(),
+            skillsets: Vec::new(),
+        }
     }
 }
 
