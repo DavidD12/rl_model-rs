@@ -12,6 +12,17 @@ pub struct Parser {
     pub model: Model,
 }
 
+impl Default for Parser {
+    fn default() -> Self {
+        Self {
+            current: Default::default(),
+            todo: Default::default(),
+            done: Default::default(),
+            model: Default::default(),
+        }
+    }
+}
+
 impl Parser {
     pub fn new<S: Into<String>>(file: S) -> Self {
         let model = Model::default();
