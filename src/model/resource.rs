@@ -62,6 +62,10 @@ impl Resource {
         }
     }
 
+    pub fn initial(&self) -> StateId {
+        self.initial.resolved()
+    }
+
     pub fn set_initial(&mut self, state: Reference<StateId>) {
         self.initial = state;
     }

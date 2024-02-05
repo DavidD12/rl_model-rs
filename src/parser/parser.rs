@@ -25,12 +25,11 @@ impl Default for Parser {
 
 impl Parser {
     pub fn new<S: Into<String>>(file: S) -> Self {
-        let model = Model::default();
         Self {
             current: None,
             todo: vec![file.into()],
             done: vec![],
-            model,
+            model: Default::default(),
         }
     }
 
