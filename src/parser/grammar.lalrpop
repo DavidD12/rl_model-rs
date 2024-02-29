@@ -79,7 +79,6 @@ Skillset: () = "skillset" <x:Identifier> "{"
     for x in skills {
         skillset.add_skill(x);
     }
-
 };
 
 //------------------------- Skillset Parameter -------------------------
