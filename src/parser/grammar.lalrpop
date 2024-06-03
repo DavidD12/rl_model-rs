@@ -13,59 +13,20 @@ match {
     _
 }
 
-//------------------------- Model -------------------------
-
-pub Model: () = Entry* => {};
-
-//------------------------- Entry -------------------------
-
-Entry: () = {
-    Include,
-    TypeSingle,
-    TypeBlock,
-    Skillset,
-};
-
-//------------------------- Include -------------------------
-
-Include: () = "include" <file:String> => {
-    parser.add(file);
-};
-
-//------------------------- Type -------------------------
-
-TypeSingle: () = "type" <x:Identifier> => {
-    let x = RlType::new(x.name, Some(x.position));
-    parser.model.add_type(x);
-};
-
-TypeBlock: () = "type" "{" <l:(<Identifier>)*> "}" => {
-    for x in l {
-        let x = RlType::new(x.name, Some(x.position));
-        parser.model.add_type(x);
-    }
-};
-
-TypeRef: Reference<TypeId> = <x:Identifier> => {
-    Reference::Unresolved(x.name, Some(x.position))
-};
-
 //------------------------- Skillset -------------------------
 
-Skillset: () = "skillset" <x:Identifier> "{" 
-        <paramters:SkillsetParameter>
+pub Skillset: () = "skillset" <x:Identifier> <types:TypeDef?> "{" 
         <data:Data>
         <resources:Resource>
         <events:Event>
         <skills:Skill>
     "}" => {
 
-    let skillset = Skillset::new(x.name, Some(x.position));
-    let id = parser.model.add_skillset(skillset);
-    let skillset = parser.model.get_skillset_mut(id).unwrap();
-
-    for x in paramters {
-        skillset.add_parameter(x);
+    let mut skillset = Skillset::new(x.name, Some(x.position));
+    if let Some(types) = types {
+        for x in types {
+            skillset.add_type(x);
+        }
     }
     for x in data {
         skillset.add_data(x);
@@ -79,22 +40,23 @@ Skillset: () = "skillset" <x:Identifier> "{"
     for x in skills {
         skillset.add_skill(x);
     }
+
+    parser.skillset = skillset
 };
 
-//------------------------- Skillset Parameter -------------------------
+//------------------------- Type -------------------------
 
-SkillsetParameter: Vec<SkillsetParameter> = {
-    <v: SkillsetParameterSingle*> => v,
-    <v: SkillsetParameterBlock> => v,
-};
-
-SkillsetParameterSingle: SkillsetParameter = "parameter" <v:Variable> => SkillsetParameter::new(v);
-SkillsetParameterBlock: Vec<SkillsetParameter> = "parameter" "{" <l:Variable*> "}" => {
-    let mut v = Vec::new();
+TypeDef: Vec<RlType> = "<" <l:IdentifierList> ">" => {
+    let mut v = vec![];
     for x in l {
-        v.push(SkillsetParameter::new(x));
+        let t = RlType::new(x.name, Some(x.position));
+        v.push(t);
     }
     v
+};
+
+TypeRef: Reference<TypeId> = <x:Identifier> => {
+    Reference::Unresolved(x.name, Some(x.position))
 };
 
 //------------------------- Data -------------------------
@@ -179,7 +141,6 @@ SkillSingle: Skill = "skill" <s:SkillDef> => s;
 SkillBlock: Vec<Skill> = "skill" "{" <l:SkillDef*> "}" => l;
 
 SkillDef: Skill = <x:Identifier> "{" 
-    <par:SkillParameter>
     <inp:Input>
     <out:Output>
     <pre:Precondition>
@@ -193,9 +154,6 @@ SkillDef: Skill = <x:Identifier> "{"
 
     let mut skill = Skill::new(x.name, Some(x.position));
 
-    for x in par {
-        skill.add_parameter(x);
-    }
     for x in inp {
         skill.add_input(x);
     }
@@ -214,8 +172,8 @@ SkillDef: Skill = <x:Identifier> "{"
     if let Some(progress) = pro {
         skill.set_progress(progress);
     }
-    if let Some(i) = int {
-        skill.set_interrupt(i);
+    if let Some(int) = int {
+        skill.set_interrupt(int);
     }
     for x in suc {
         skill.add_success(x);
@@ -225,22 +183,6 @@ SkillDef: Skill = <x:Identifier> "{"
     }
     //
     skill
-};
-
-//------------------------- Skill Parameter -------------------------
-
-SkillParameter: Vec<SkillParameter> = {
-    <v: SkillParameterSingle*> => v,
-    <v: SkillParameterBlock> => v,
-};
-
-SkillParameterSingle: SkillParameter = "parameter" <v:Variable> => SkillParameter::new(v);
-SkillParameterBlock: Vec<SkillParameter> = "parameter" "{" <l:Variable*> "}" => {
-    let mut v = Vec::new();
-    for x in l {
-        v.push(SkillParameter::new(x));
-    }
-    v
 };
 
 //------------------------- Input -------------------------
@@ -275,6 +217,19 @@ PreconditionBlock: Vec<Precondition> = "precondition" "{" <l:PreconditionDef*> "
 
 PreconditionDef: Precondition = <n:Identifier> ":" <e:Expr> => Precondition::new(n.name, e, Some(n.position));
 
+//------------------------- Precondition -------------------------
+
+Postcondition: Vec<Postcondition> = {
+    <v: PostconditionSingle*> => v,
+    <v: PostconditionBlock> => v,
+};
+
+PostconditionSingle: Postcondition = "postcondition" <p:PostconditionDef> => p;
+PostconditionBlock: Vec<Postcondition> = "postcondition" "{" <l:PostconditionDef*> "}" => l;
+
+PostconditionDef: Postcondition = <n:Identifier> ":" <e:Expr> => Postcondition::new(n.name, e, Some(n.position));
+
+
 //------------------------- Start -------------------------
 
 Start: Vec<Effect> = {
@@ -303,13 +258,6 @@ InvariantDef: Invariant = <n:Identifier> "{" "guard" <e:Expr> <o:Effects?> "}" =
     Invariant::new(n.name, e, l, Some(n.position))
 };
 
-//------------------------- Interrupt -------------------------
-
-Interrupt: Interrupt = <l:@L>"interrupt" "{" "interrupting" <b:BoolValue> <e:Effects> <p:Postcondition?> "}" => {
-    let position = Position::new(parser.file(), lookup, l);
-    Interrupt::new(b, e, p, Some(position))
-};
-
 //------------------------- Progress -------------------------
 
 Progress: Progress = <l:@L>"progress" "{" <p:Period> <m:Message> "}" => {
@@ -325,6 +273,13 @@ Message: Vec<Variable> = {
 MessageSingle: Variable = "message" <v:Variable> => v;
 MessageBlock: Vec<Variable> = "message" "{" <v:Variable*> "}" => v;
 
+//------------------------- Interrupt -------------------------
+
+Interrupt: Interrupt = <l:@L>"interrupt" "{" <p:Postcondition> <e:Effects> "}" => {
+    let position = Position::new(parser.file(), lookup, l);
+    Interrupt::new(p, e, Some(position))
+};
+
 //------------------------- Success -------------------------
 
 Success: Vec<Success> = {
@@ -335,12 +290,12 @@ Success: Vec<Success> = {
 SuccessSingle: Success = "success" <i:SuccessDef> => i;
 SuccessBlock: Vec<Success> = "success" "{" <v:SuccessDef*> "}" => v;
 
-SuccessDef: Success = <n:Identifier> "{" <e:Effects?> <p:Postcondition?> "}" => {
+SuccessDef: Success = <n:Identifier> "{" <p:Postcondition> <e:Effects?> "}" => {
     let l = match e {
         Some(v) => v,
         None => Vec::new(),
     };
-    Success::new(n.name, l, p, Some(n.position))
+    Success::new(n.name, p, l, Some(n.position))
 };
 
 //------------------------- Failure -------------------------
@@ -353,12 +308,12 @@ Failure: Vec<Failure> = {
 FailureSingle: Failure = "failure" <i:FailureDef> => i;
 FailureBlock: Vec<Failure> = "failure" "{" <v:FailureDef*> "}" => v;
 
-FailureDef: Failure = <n:Identifier> "{" <e:Effects?> <p:Postcondition?> "}" => {
+FailureDef: Failure = <n:Identifier> "{" <p:Postcondition> <e:Effects?> "}" => {
     let l = match e {
         Some(v) => v,
         None => Vec::new(),
     };
-    Failure::new(n.name, l, p, Some(n.position))
+    Failure::new(n.name, p, l, Some(n.position))
 };
 
 //------------------------- Variable -------------------------
@@ -376,10 +331,6 @@ EffectSingle: Vec<Effect> = "effect" <e:Effect> => vec![e];
 EffectBlock: Vec<Effect> = "effect" "{" <l:Effect*> "}" => l;
 
 Effect: Effect = <r:ResourceRef> "->" <s:StateRef> => Effect::new(r, s);
-
-//------------------------- Postcondition -------------------------
-
-Postcondition: Expr = "postcondition" <e:Expr> => e;
 
 //------------------------- BoolValue -------------------------
 
@@ -439,4 +390,14 @@ UInteger: u64 = <i:r"[0-9]+"> => i.parse::<u64>().unwrap();
 
 Identifier: Identifier = <l:@L> <s:r"[a-zA-Z_][a-zA-Z_0-9]*"> <r:@R> => {
     Identifier::new(parser.file(), lookup, s, l)
+};
+
+IdentifierList: Vec<Identifier> = <i: Identifier> <l: CommaIdentifier*> => {
+    let mut v = vec![i];
+    v.extend(l);
+    v
+};
+
+CommaIdentifier: Identifier = "," <i:Identifier> => {
+    i
 };

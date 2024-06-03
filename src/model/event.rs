@@ -2,11 +2,11 @@ use super::*;
 use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub struct EventId(pub SkillsetId, pub usize);
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
+pub struct EventId(pub usize);
 impl Id for EventId {
-    fn default() -> Self {
-        Self(SkillsetId::default(), 0)
+    fn index(&self) -> usize {
+        self.0
     }
 }
 
@@ -92,19 +92,19 @@ impl Named<EventId> for Event {
 }
 
 impl ToLang for Event {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         let mut s = String::new();
         s.push_str(&format!("\t\t{} {{\n", self.name));
         // guard
         match &self.guard {
-            Some(guard) => s.push_str(&format!("\t\t\tguard {}\n", guard.to_lang(model))),
+            Some(guard) => s.push_str(&format!("\t\t\tguard {}\n", guard.to_lang(skillset))),
             None => {}
         }
         // Effects
         if !self.effects.is_empty() {
             s.push_str("\t\t\teffect {\n");
             for x in self.effects.iter() {
-                s.push_str(&format!("\t\t\t\t{}\n", x.to_lang(model)))
+                s.push_str(&format!("\t\t\t\t{}\n", x.to_lang(skillset)))
             }
             s.push_str("\t\t\t}\n");
         }

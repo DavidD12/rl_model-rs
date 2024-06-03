@@ -2,19 +2,10 @@ use super::*;
 use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub struct SkillsetId(pub usize);
-impl Id for SkillsetId {
-    fn default() -> Self {
-        Self(0)
-    }
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Skillset {
-    id: SkillsetId,
     name: String,
-    parameters: Vec<SkillsetParameter>,
+    types: Vec<RlType>,
     data: Vec<Data>,
     resources: Vec<Resource>,
     events: Vec<Event>,
@@ -24,40 +15,50 @@ pub struct Skillset {
 
 impl Skillset {
     pub fn new<S: Into<String>>(name: S, position: Option<Position>) -> Self {
-        let id = SkillsetId::default();
         let name = name.into();
         Self {
-            id,
             name,
-            parameters: Vec::new(),
-            data: Vec::new(),
-            resources: Vec::new(),
-            events: Vec::new(),
-            skills: Vec::new(),
+            types: Default::default(),
+            data: Default::default(),
+            resources: Default::default(),
+            events: Default::default(),
+            skills: Default::default(),
             position,
         }
     }
 
-    //---------- Parameter ----------
-
-    pub fn parameter(&self) -> &Vec<SkillsetParameter> {
-        &self.parameters
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
-    pub fn get_parameter(&self, id: SkillsetParameterId) -> Option<&SkillsetParameter> {
-        let SkillsetParameterId(skillset_id, parameter_id) = id;
-        if self.id != skillset_id {
-            None
-        } else {
-            self.parameters.get(parameter_id)
-        }
+    pub fn position(&self) -> Option<Position> {
+        self.position.clone()
     }
 
-    pub fn add_parameter(&mut self, mut parameter: SkillsetParameter) -> SkillsetParameterId {
-        let id = SkillsetParameterId(self.id, self.parameters.len());
-        parameter.set_id(id);
-        self.parameters.push(parameter);
+    //---------- Type ----------
+
+    pub fn types(&self) -> &Vec<RlType> {
+        &self.types
+    }
+
+    pub fn add_type(&mut self, mut rl_type: RlType) -> TypeId {
+        let id = TypeId(self.types.len());
+        rl_type.set_id(id);
+        self.types.push(rl_type);
         id
+    }
+
+    pub fn get_type(&self, id: TypeId) -> Option<&RlType> {
+        let TypeId(index) = id;
+        self.types.get(index)
+    }
+
+    pub fn type_map(&self) -> HashMap<String, TypeId> {
+        let mut map = HashMap::new();
+        for x in self.types.iter() {
+            map.insert(x.name().into(), x.id());
+        }
+        map
     }
 
     //---------- Data ----------
@@ -67,16 +68,11 @@ impl Skillset {
     }
 
     pub fn get_data(&self, id: DataId) -> Option<&Data> {
-        let DataId(skillset_id, data_id) = id;
-        if self.id != skillset_id {
-            None
-        } else {
-            self.data.get(data_id)
-        }
+        self.data.get(id.index())
     }
 
     pub fn add_data(&mut self, mut data: Data) -> DataId {
-        let id = DataId(self.id, self.data.len());
+        let id = DataId(self.data.len());
         data.set_id(id);
         self.data.push(data);
         id
@@ -89,16 +85,11 @@ impl Skillset {
     }
 
     pub fn get_resource(&self, id: ResourceId) -> Option<&Resource> {
-        let ResourceId(skillset_id, resource_id) = id;
-        if self.id != skillset_id {
-            None
-        } else {
-            self.resources.get(resource_id)
-        }
+        self.resources.get(id.index())
     }
 
     pub fn add_resource(&mut self, mut resource: Resource) -> ResourceId {
-        let id = ResourceId(self.id, self.resources.len());
+        let id = ResourceId(self.resources.len());
         resource.set_id(id);
         self.resources.push(resource);
         id
@@ -115,8 +106,7 @@ impl Skillset {
     //---------- State ----------
 
     pub fn get_state(&self, id: StateId) -> Option<&State> {
-        let StateId(resource_id, _) = id;
-        let resource = self.get_resource(resource_id)?;
+        let resource = self.get_resource(id.resource())?;
         resource.get_state(id)
     }
 
@@ -137,16 +127,11 @@ impl Skillset {
     }
 
     pub fn get_event(&self, id: EventId) -> Option<&Event> {
-        let EventId(skillset_id, event_id) = id;
-        if self.id != skillset_id {
-            None
-        } else {
-            self.events.get(event_id)
-        }
+        self.events.get(id.index())
     }
 
     pub fn add_event(&mut self, mut event: Event) -> EventId {
-        let id = EventId(self.id, self.events.len());
+        let id = EventId(self.events.len());
         event.set_id(id);
         self.events.push(event);
         id
@@ -159,16 +144,11 @@ impl Skillset {
     }
 
     pub fn get_skill(&self, id: SkillId) -> Option<&Skill> {
-        let SkillId(skillset_id, event_id) = id;
-        if self.id != skillset_id {
-            None
-        } else {
-            self.skills.get(event_id)
-        }
+        self.skills.get(id.index())
     }
 
     pub fn add_skill(&mut self, mut skill: Skill) -> SkillId {
-        let id = SkillId(self.id, self.skills.len());
+        let id = SkillId(self.skills.len());
         skill.set_id(id);
         self.skills.push(skill);
         id
@@ -176,9 +156,10 @@ impl Skillset {
 
     //---------- Duplicate ----------
 
-    pub fn parameter_naming(&self) -> Vec<Naming> {
-        self.parameters.iter().map(|x| x.naming()).collect()
+    pub fn type_naming(&self) -> Vec<Naming> {
+        self.types.iter().map(|x| x.naming()).collect()
     }
+
     pub fn data_naming(&self) -> Vec<Naming> {
         self.data.iter().map(|x| x.naming()).collect()
     }
@@ -197,17 +178,9 @@ impl Skillset {
         self.skills.iter().map(|x| x.naming()).collect()
     }
 
-    pub fn duplicate(&self, model: &Model) -> Result<(), RlError> {
-        let types = model.type_naming();
+    pub fn duplicate(&self) -> Result<(), RlError> {
+        let types = self.type_naming();
 
-        // Parameter
-        check_duplicate(
-            types
-                .clone()
-                .into_iter()
-                .chain(self.parameter_naming().into_iter())
-                .collect(),
-        )?;
         // Data
         check_duplicate(
             types
@@ -243,7 +216,7 @@ impl Skillset {
 
         // Skill
         for x in self.skills.iter() {
-            x.duplicate(model)?;
+            x.duplicate(self)?;
         }
 
         Ok(())
@@ -251,14 +224,17 @@ impl Skillset {
 
     //---------- Resolve ----------
 
-    pub fn resolve_type(&mut self, map: &HashMap<String, TypeId>) -> Result<(), RlError> {
-        // Parameter
-        for x in self.parameters.iter_mut() {
-            x.resolve_type(map)?;
-        }
+    pub fn resolve(&mut self) -> Result<(), RlError> {
+        self.resolve_type()?;
+        self.resolve_resource()?;
+        self.resolve_state()
+    }
+
+    pub fn resolve_type(&mut self) -> Result<(), RlError> {
+        let map = self.type_map();
         // Data
         for x in self.data.iter_mut() {
-            x.resolve_type(map)?;
+            x.resolve_type(&map)?;
         }
         // Skill
         for x in self.skills.iter_mut() {
@@ -299,28 +275,14 @@ impl Skillset {
     }
 }
 
-impl Named<SkillsetId> for Skillset {
-    fn id(&self) -> SkillsetId {
-        self.id
-    }
-    fn set_id(&mut self, id: SkillsetId) {
-        self.id = id;
-    }
-    fn name(&self) -> &str {
-        &self.name
-    }
-    fn position(&self) -> Option<Position> {
-        self.position.clone()
-    }
-}
-
 //------------------------- Get From Id -------------------------
 
-impl GetFromId<SkillsetParameterId, SkillsetParameter> for Skillset {
-    fn get(&self, id: SkillsetParameterId) -> Option<&SkillsetParameter> {
-        self.get_parameter(id)
+impl GetFromId<TypeId, RlType> for Skillset {
+    fn get(&self, id: TypeId) -> Option<&RlType> {
+        self.get_type(id)
     }
 }
+
 impl GetFromId<DataId, Data> for Skillset {
     fn get(&self, id: DataId) -> Option<&Data> {
         self.get_data(id)
@@ -329,6 +291,11 @@ impl GetFromId<DataId, Data> for Skillset {
 impl GetFromId<ResourceId, Resource> for Skillset {
     fn get(&self, id: ResourceId) -> Option<&Resource> {
         self.get_resource(id)
+    }
+}
+impl GetFromId<StateId, State> for Skillset {
+    fn get(&self, id: StateId) -> Option<&State> {
+        self.get_state(id)
     }
 }
 impl GetFromId<EventId, Event> for Skillset {
@@ -341,64 +308,28 @@ impl GetFromId<SkillId, Skill> for Skillset {
         self.get_skill(id)
     }
 }
-
-impl GetFromId<StateId, State> for Skillset {
-    fn get(&self, id: StateId) -> Option<&State> {
-        let StateId(resource_id, _) = id;
-        let resource = self.get(resource_id)?;
-        resource.get(id)
+impl GetFromId<PreconditionId, Precondition> for Skillset {
+    fn get(&self, id: PreconditionId) -> Option<&Precondition> {
+        let skill = self.get(id.skill())?;
+        skill.get(id)
     }
 }
-
-//------------------------- ToLang -------------------------
-
-impl ToLang for Skillset {
-    fn to_lang(&self, model: &Model) -> String {
-        let mut s = String::new();
-        s.push_str(&format!("skillset {} {{\n", self.name));
-        // Parameter
-        if !self.parameters.is_empty() {
-            s.push_str("\tparameter {\n");
-            for x in self.parameters.iter() {
-                s.push_str(&format!("\t\t{}\n", &x.to_lang(model)));
-            }
-            s.push_str("\t}\n");
-        }
-        // Data
-        if !self.data.is_empty() {
-            s.push_str("\tdata {\n");
-            for x in self.data.iter() {
-                s.push_str(&format!("\t\t{}", &x.to_lang(model)));
-            }
-            s.push_str("\t}\n");
-        }
-        // Resource
-        if !self.resources.is_empty() {
-            s.push_str("\tresource {\n");
-            for x in self.resources.iter() {
-                s.push_str(&x.to_lang(model));
-            }
-            s.push_str("\t}\n");
-        }
-        // Event
-        if !self.events.is_empty() {
-            s.push_str("\tevent {\n");
-            for x in self.events.iter() {
-                s.push_str(&x.to_lang(model));
-            }
-            s.push_str("\t}\n");
-        }
-        // Skill
-        if !self.skills.is_empty() {
-            s.push_str("\tskill {\n");
-            for x in self.skills.iter() {
-                s.push_str(&x.to_lang(model));
-            }
-            s.push_str("\t}\n");
-        }
-        //
-        s.push_str("}\n");
-        s
+impl GetFromId<InvariantId, Invariant> for Skillset {
+    fn get(&self, id: InvariantId) -> Option<&Invariant> {
+        let skill = self.get(id.skill())?;
+        skill.get(id)
+    }
+}
+impl GetFromId<SuccessId, Success> for Skillset {
+    fn get(&self, id: SuccessId) -> Option<&Success> {
+        let skill = self.get(id.skill())?;
+        skill.get(id)
+    }
+}
+impl GetFromId<FailureId, Failure> for Skillset {
+    fn get(&self, id: FailureId) -> Option<&Failure> {
+        let skill = self.get(id.skill())?;
+        skill.get(id)
     }
 }
 
@@ -406,6 +337,51 @@ impl ToLang for Skillset {
 
 impl std::fmt::Display for Skillset {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        write!(f, "skillset {}", self.name)?;
+        // Types
+        if let Some((first, others)) = self.types.split_first() {
+            write!(f, "<{}", first.name())?;
+            for t in others {
+                write!(f, ", {}", t.name())?;
+            }
+            write!(f, ">")?;
+        }
+        write!(f, " {{\n")?;
+        // Data
+        if !self.data.is_empty() {
+            write!(f, "\tdata {{\n")?;
+            for x in self.data.iter() {
+                write!(f, "\t\t{}", &x.to_lang(self))?;
+            }
+            write!(f, "\t}}\n")?;
+        }
+        // Resource
+        if !self.resources.is_empty() {
+            write!(f, "\tresource {{\n")?;
+            for x in self.resources.iter() {
+                write!(f, "{}", x.to_lang(self))?;
+            }
+            write!(f, "\t}}\n")?;
+        }
+        // Event
+        if !self.events.is_empty() {
+            write!(f, "\tevent {{\n")?;
+            for x in self.events.iter() {
+                write!(f, "{}", x.to_lang(self))?;
+            }
+            write!(f, "\t}}\n")?;
+        }
+        // Skill
+        if !self.skills.is_empty() {
+            write!(f, "\tskill {{\n")?;
+            for x in self.skills.iter() {
+                write!(f, "{}", x.to_lang(self))?;
+            }
+            write!(f, "\t}}\n")?;
+        }
+        //
+        write!(f, "}}\n")?;
+        //
+        Ok(())
     }
 }

@@ -3,11 +3,11 @@ use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 use std::time::Duration;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub struct DataId(pub SkillsetId, pub usize);
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
+pub struct DataId(pub usize);
 impl Id for DataId {
-    fn default() -> Self {
-        Self(SkillsetId::default(), 0)
+    fn index(&self) -> usize {
+        self.0
     }
 }
 
@@ -88,15 +88,15 @@ impl Named<DataId> for Data {
 }
 
 impl ToLang for Data {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         match self.period {
             Some(period) => format!(
                 "{}: {} period {} ms\n",
                 self.name,
-                self.rl_type.to_lang(model),
+                self.rl_type.to_lang(skillset),
                 period.as_millis()
             ),
-            None => format!("{}: {}\n", self.name, self.rl_type.to_lang(model)),
+            None => format!("{}: {}\n", self.name, self.rl_type.to_lang(skillset)),
         }
     }
 }

@@ -4,20 +4,30 @@ use std::collections::HashMap;
 
 pub trait TerminateId: Id {}
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
 pub struct SuccessId(pub SkillId, pub usize);
 impl Id for SuccessId {
-    fn default() -> Self {
-        Self(SkillId::default(), 0)
+    fn index(&self) -> usize {
+        self.1
+    }
+}
+impl SuccessId {
+    pub fn skill(&self) -> SkillId {
+        self.0
     }
 }
 impl TerminateId for SuccessId {}
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
 pub struct FailureId(pub SkillId, pub usize);
 impl Id for FailureId {
-    fn default() -> Self {
-        Self(SkillId::default(), 0)
+    fn index(&self) -> usize {
+        self.1
+    }
+}
+impl FailureId {
+    pub fn skill(&self) -> SkillId {
+        self.0
     }
 }
 impl TerminateId for FailureId {}
@@ -29,16 +39,16 @@ pub type Failure = Terminate<FailureId>;
 pub struct Terminate<I: TerminateId> {
     id: I,
     name: String,
+    postconditions: Vec<Postcondition>,
     effects: Vec<Effect>,
-    postcondition: Option<Expr>,
     position: Option<Position>,
 }
 
 impl<I: TerminateId> Terminate<I> {
     pub fn new<S: Into<String>>(
         name: S,
+        postconditions: Vec<Postcondition>,
         effects: Vec<Effect>,
-        postcondition: Option<Expr>,
         position: Option<Position>,
     ) -> Self {
         let id = I::default();
@@ -47,17 +57,17 @@ impl<I: TerminateId> Terminate<I> {
             id,
             name,
             effects,
-            postcondition,
+            postconditions,
             position,
         }
     }
 
-    pub fn effects(&self) -> &Vec<Effect> {
-        &self.effects
+    pub fn postconditions(&self) -> &Vec<Postcondition> {
+        &self.postconditions
     }
 
-    pub fn postcondition(&self) -> &Option<Expr> {
-        &self.postcondition
+    pub fn effects(&self) -> &Vec<Effect> {
+        &self.effects
     }
 
     //---------- Resolve ----------
@@ -66,8 +76,8 @@ impl<I: TerminateId> Terminate<I> {
         for x in self.effects.iter_mut() {
             x.resolve_resource(map)?;
         }
-        if let Some(post) = &mut self.postcondition {
-            post.resolve_resource(map)?;
+        for x in self.postconditions.iter_mut() {
+            x.resolve_resource(map)?;
         }
         Ok(())
     }
@@ -76,8 +86,8 @@ impl<I: TerminateId> Terminate<I> {
         for x in self.effects.iter_mut() {
             x.resolve_state(map)?;
         }
-        if let Some(post) = &mut self.postcondition {
-            post.resolve_state(map)?;
+        for x in self.postconditions.iter_mut() {
+            x.resolve_state(map)?;
         }
         Ok(())
     }
@@ -112,22 +122,23 @@ impl Named<FailureId> for Failure {
     }
 }
 impl<I: TerminateId> ToLang for Terminate<I> {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         let mut s = format!("{} {{\n", self.name);
+        // Postcondition
+        if !self.postconditions.is_empty() {
+            s.push_str("\t\t\t\t\teffect {\n");
+            for x in self.postconditions.iter() {
+                s.push_str(&format!("\t\t\t\t\t\t{}\n", x.to_lang(skillset)))
+            }
+            s.push_str("\t\t\t\t\t}\n");
+        }
         // Effects
         if !self.effects.is_empty() {
             s.push_str("\t\t\t\t\teffect {\n");
             for x in self.effects.iter() {
-                s.push_str(&format!("\t\t\t\t\t\t{}\n", x.to_lang(model)))
+                s.push_str(&format!("\t\t\t\t\t\t{}\n", x.to_lang(skillset)))
             }
             s.push_str("\t\t\t\t\t}\n");
-        }
-        // guard
-        if let Some(post) = &self.postcondition {
-            s.push_str(&format!(
-                "\t\t\t\t\tpostcondition {}\n",
-                post.to_lang(model)
-            ));
         }
         //
         s.push_str("\t\t\t\t}\n");

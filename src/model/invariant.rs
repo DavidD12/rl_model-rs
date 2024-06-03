@@ -2,11 +2,16 @@ use super::*;
 use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
 pub struct InvariantId(pub SkillId, pub usize);
 impl Id for InvariantId {
-    fn default() -> Self {
-        Self(SkillId::default(), 0)
+    fn index(&self) -> usize {
+        self.1
+    }
+}
+impl InvariantId {
+    pub fn skill(&self) -> SkillId {
+        self.0
     }
 }
 
@@ -83,15 +88,18 @@ impl Named<InvariantId> for Invariant {
 }
 
 impl ToLang for Invariant {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         let mut s = format!("{} {{\n", self.name);
         // guard
-        s.push_str(&format!("\t\t\t\t\tguard {}\n", self.guard.to_lang(model)));
+        s.push_str(&format!(
+            "\t\t\t\t\tguard {}\n",
+            self.guard.to_lang(skillset)
+        ));
         // Effects
         if !self.effects.is_empty() {
             s.push_str("\t\t\t\t\teffect {\n");
             for x in self.effects.iter() {
-                s.push_str(&format!("\t\t\t\t\t\t{}\n", x.to_lang(model)))
+                s.push_str(&format!("\t\t\t\t\t\t{}\n", x.to_lang(skillset)))
             }
             s.push_str("\t\t\t\t\t}\n");
         }

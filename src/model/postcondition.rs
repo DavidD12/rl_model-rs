@@ -3,29 +3,24 @@ use crate::parser::*;
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
-pub struct PreconditionId(pub SkillId, pub usize);
-impl Id for PreconditionId {
+pub struct PostconditionId(pub usize);
+impl Id for PostconditionId {
     fn index(&self) -> usize {
-        self.1
-    }
-}
-impl PreconditionId {
-    pub fn skill(&self) -> SkillId {
         self.0
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Precondition {
-    id: PreconditionId,
+pub struct Postcondition {
+    id: PostconditionId,
     name: String,
     expr: Expr,
     position: Option<Position>,
 }
 
-impl Precondition {
+impl Postcondition {
     pub fn new<S: Into<String>>(name: S, expr: Expr, position: Option<Position>) -> Self {
-        let id = PreconditionId::default();
+        let id = PostconditionId::default();
         let name = name.into();
         Self {
             id,
@@ -50,12 +45,12 @@ impl Precondition {
     }
 }
 
-impl Named<PreconditionId> for Precondition {
-    fn id(&self) -> PreconditionId {
+impl Named<PostconditionId> for Postcondition {
+    fn id(&self) -> PostconditionId {
         self.id
     }
 
-    fn set_id(&mut self, id: PreconditionId) {
+    fn set_id(&mut self, id: PostconditionId) {
         self.id = id;
     }
 
@@ -68,13 +63,13 @@ impl Named<PreconditionId> for Precondition {
     }
 }
 
-impl ToLang for Precondition {
+impl ToLang for Postcondition {
     fn to_lang(&self, skillset: &Skillset) -> String {
         format!("{}: {}", self.name, self.expr.to_lang(skillset))
     }
 }
 
-impl std::fmt::Display for Precondition {
+impl std::fmt::Display for Postcondition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)
     }

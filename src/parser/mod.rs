@@ -7,7 +7,7 @@ pub use error::*;
 pub mod position;
 pub use position::*;
 
-use crate::model::Model;
+use crate::model::Skillset;
 use line_col::LineColLookup;
 
 #[derive(Debug, Clone)]
@@ -24,8 +24,8 @@ impl Identifier {
     }
 }
 
-pub fn parse_file(file: &str) -> Result<Model, RlError> {
+pub fn parse_file(file: &str) -> Result<Skillset, RlError> {
     let mut parser = Parser::new(file);
     parser.parse()?;
-    Ok(parser.model)
+    Ok(parser.skillset)
 }

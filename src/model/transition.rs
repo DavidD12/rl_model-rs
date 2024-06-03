@@ -62,8 +62,12 @@ impl Transition {
 }
 
 impl ToLang for Transition {
-    fn to_lang(&self, model: &Model) -> String {
-        format!("{} -> {}", self.src.to_lang(model), self.dst.to_lang(model))
+    fn to_lang(&self, skillset: &Skillset) -> String {
+        format!(
+            "{} -> {}",
+            self.src.to_lang(skillset),
+            self.dst.to_lang(skillset)
+        )
     }
 }
 
@@ -90,13 +94,13 @@ impl Transitions {
 }
 
 impl ToLang for Transitions {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         match self {
             Transitions::All => format!("\t\t\ttransition all\n"),
             Transitions::List(l) => {
                 let mut s = String::from("\t\t\ttransition {\n");
                 for x in l {
-                    s.push_str(&format!("\t\t\t\t{}\n", x.to_lang(model)));
+                    s.push_str(&format!("\t\t\t\t{}\n", x.to_lang(skillset)));
                 }
                 s.push_str("\t\t\t}\n");
                 s

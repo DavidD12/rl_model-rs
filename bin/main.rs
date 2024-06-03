@@ -25,7 +25,7 @@ fn main() {
         env_logger::init();
     }
     //
-    if let Ok(model) = load_model(&args.file) {
+    if let Ok(model) = load_skillset(&args.file) {
         if args.verbose >= 3 {
             // println!("{:#?}", model);
             println!("{}", model);

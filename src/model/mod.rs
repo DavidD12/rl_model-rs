@@ -1,8 +1,8 @@
 pub mod reference;
 pub use reference::*;
 
-pub mod model;
-pub use model::*;
+// pub mod model;
+// pub use model::*;
 
 pub mod rl_type;
 pub use rl_type::*;
@@ -29,14 +29,22 @@ pub use skill::*;
 // pub use input::*;
 // pub mod output;
 // pub use output::*;
+
 pub mod precondition;
 pub use precondition::*;
+
+pub mod postcondition;
+pub use postcondition::*;
+
 pub mod invariant;
 pub use invariant::*;
+
 pub mod progress;
 pub use progress::*;
+
 pub mod interrupt;
 pub use interrupt::*;
+
 pub mod terminate;
 pub use terminate::*;
 
@@ -46,22 +54,19 @@ pub use effect::*;
 pub mod variable;
 pub use variable::*;
 
-pub mod parameter;
-pub use parameter::*;
-
 pub mod expr;
 pub use expr::*;
 
 use crate::parser::{Position, RlError};
 
 pub trait ToLang {
-    fn to_lang(&self, model: &Model) -> String;
+    fn to_lang(&self, skillset: &Skillset) -> String;
 }
 
 //------------------------- Id -------------------------
 
-pub trait Id: Clone + Copy + PartialEq + Eq + core::hash::Hash + std::fmt::Debug {
-    fn default() -> Self;
+pub trait Id: Clone + Copy + PartialEq + Eq + core::hash::Hash + std::fmt::Debug + Default {
+    fn index(&self) -> usize;
 }
 
 pub trait GetFromId<I: Id, T> {

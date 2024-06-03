@@ -1,11 +1,16 @@
 use super::*;
 use crate::parser::Position;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
 pub struct StateId(pub ResourceId, pub usize);
 impl Id for StateId {
-    fn default() -> Self {
-        Self(ResourceId::default(), 0)
+    fn index(&self) -> usize {
+        self.1
+    }
+}
+impl StateId {
+    pub fn resource(&self) -> ResourceId {
+        self.0
     }
 }
 

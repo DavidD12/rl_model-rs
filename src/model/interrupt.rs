@@ -4,37 +4,30 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Interrupt {
-    interrupting: bool,
     effects: Vec<Effect>,
-    postcondition: Option<Expr>,
+    postconditions: Vec<Postcondition>,
     position: Option<Position>,
 }
 
 impl Interrupt {
     pub fn new(
-        interrupting: bool,
+        postconditions: Vec<Postcondition>,
         effects: Vec<Effect>,
-        postcondition: Option<Expr>,
         position: Option<Position>,
     ) -> Self {
         Self {
-            interrupting,
             effects,
-            postcondition,
+            postconditions,
             position,
         }
     }
 
-    pub fn interrupting(&self) -> bool {
-        self.interrupting
+    pub fn postconditions(&self) -> &Vec<Postcondition> {
+        &self.postconditions
     }
 
     pub fn effects(&self) -> &Vec<Effect> {
         &self.effects
-    }
-
-    pub fn postcondition(&self) -> &Option<Expr> {
-        &self.postcondition
     }
 
     pub fn position(&self) -> Option<Position> {
@@ -47,8 +40,8 @@ impl Interrupt {
         for x in self.effects.iter_mut() {
             x.resolve_resource(map)?;
         }
-        if let Some(post) = &mut self.postcondition {
-            post.resolve_resource(map)?;
+        for x in self.postconditions.iter_mut() {
+            x.resolve_resource(map)?;
         }
         Ok(())
     }
@@ -57,29 +50,31 @@ impl Interrupt {
         for x in self.effects.iter_mut() {
             x.resolve_state(map)?;
         }
-        if let Some(post) = &mut self.postcondition {
-            post.resolve_state(map)?;
+        for x in self.postconditions.iter_mut() {
+            x.resolve_state(map)?;
         }
         Ok(())
     }
 }
 
 impl ToLang for Interrupt {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         let mut s = String::from("\t\t\tinterrupt {\n");
-        // Interrupting
-        s.push_str(&format!("\t\t\t\tinterrupting {}\n", self.interrupting));
+        // Postcondition
+        if !self.postconditions.is_empty() {
+            s.push_str("\t\t\t\tpostcondition {\n");
+            for x in self.postconditions() {
+                s.push_str(&format!("\t\t\t\t\t{}\n", x.to_lang(skillset)));
+            }
+            s.push_str("\t\t\t\t}\n");
+        }
         // Effects
         if !self.effects.is_empty() {
             s.push_str("\t\t\t\teffect {\n");
             for x in self.effects.iter() {
-                s.push_str(&format!("\t\t\t\t\t{}\n", x.to_lang(model)))
+                s.push_str(&format!("\t\t\t\t\t{}\n", x.to_lang(skillset)))
             }
             s.push_str("\t\t\t\t}\n");
-        }
-        // Postcondition
-        if let Some(post) = self.postcondition() {
-            s.push_str(&format!("\t\t\t\tpostcondition {}\n", post.to_lang(model)));
         }
         //
         s.push_str("\t\t\t}\n");

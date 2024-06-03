@@ -109,20 +109,28 @@ impl Expr {
 }
 
 impl ToLang for Expr {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         match self {
             Expr::True => String::from("true"),
             Expr::False => String::from("false"),
             Expr::ResourceEq(resource, state) => {
-                format!("{} == {}", resource.to_lang(model), state.to_lang(model))
+                format!(
+                    "{} == {}",
+                    resource.to_lang(skillset),
+                    state.to_lang(skillset)
+                )
             }
             Expr::ResourceNe(resource, state) => {
-                format!("{} != {}", resource.to_lang(model), state.to_lang(model))
+                format!(
+                    "{} != {}",
+                    resource.to_lang(skillset),
+                    state.to_lang(skillset)
+                )
             }
-            Expr::Not(e) => format!("(not {})", e.to_lang(model)),
-            Expr::And(l, r) => format!("({} and {})", l.to_lang(model), r.to_lang(model)),
-            Expr::Or(l, r) => format!("({} or {})", l.to_lang(model), r.to_lang(model)),
-            Expr::Implies(l, r) => format!("({} => {})", l.to_lang(model), r.to_lang(model)),
+            Expr::Not(e) => format!("(not {})", e.to_lang(skillset)),
+            Expr::And(l, r) => format!("({} and {})", l.to_lang(skillset), r.to_lang(skillset)),
+            Expr::Or(l, r) => format!("({} or {})", l.to_lang(skillset), r.to_lang(skillset)),
+            Expr::Implies(l, r) => format!("({} => {})", l.to_lang(skillset), r.to_lang(skillset)),
         }
     }
 }

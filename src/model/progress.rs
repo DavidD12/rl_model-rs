@@ -42,7 +42,7 @@ impl Progress {
 }
 
 impl ToLang for Progress {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         let mut s = String::from("\t\t\tprogress {\n");
         // guard
         s.push_str(&format!("\t\t\t\tperiod {} ms\n", self.period.as_millis()));
@@ -50,7 +50,7 @@ impl ToLang for Progress {
         if !self.message.is_empty() {
             s.push_str("\t\t\t\tmessage {\n");
             for x in self.message.iter() {
-                s.push_str(&format!("\t\t\t\t\t{}\n", x.to_lang(model)))
+                s.push_str(&format!("\t\t\t\t\t{}\n", x.to_lang(skillset)))
             }
             s.push_str("\t\t\t\t}\n");
         }

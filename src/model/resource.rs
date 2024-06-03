@@ -2,16 +2,10 @@ use super::*;
 use crate::parser::{Position, RlError};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub struct ResourceId(pub SkillsetId, pub usize);
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
+pub struct ResourceId(pub usize);
 impl Id for ResourceId {
-    fn default() -> Self {
-        Self(SkillsetId::default(), 0)
-    }
-}
-
-impl ResourceId {
-    pub fn skillset(&self) -> SkillsetId {
+    fn index(&self) -> usize {
         self.0
     }
 }
@@ -166,7 +160,7 @@ impl GetFromId<StateId, State> for Resource {
 //------------------------- ToLang -------------------------
 
 impl ToLang for Resource {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         let mut s = String::new();
         s.push_str(&format!("\t\t{} {{\n", self.name));
         // state
@@ -176,9 +170,12 @@ impl ToLang for Resource {
         }
         s.push_str(" }\n");
         // initial
-        s.push_str(&format!("\t\t\tinitial {}\n", self.initial.to_lang(model)));
+        s.push_str(&format!(
+            "\t\t\tinitial {}\n",
+            self.initial.to_lang(skillset)
+        ));
         // transitions
-        s.push_str(&self.transitions.to_lang(model));
+        s.push_str(&self.transitions.to_lang(skillset));
         //
         s.push_str("\t\t}\n");
         s

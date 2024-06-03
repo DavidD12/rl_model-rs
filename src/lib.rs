@@ -6,15 +6,15 @@ extern crate log;
 
 pub mod model;
 pub mod parser;
-use crate::model::Model;
+use crate::model::Skillset;
 
-pub fn load_model(filename: &str) -> Result<Model, parser::RlError> {
+pub fn load_skillset(filename: &str) -> Result<Skillset, parser::RlError> {
     // Parsing
     match parser::parse_file(filename) {
-        Ok(mut model) => {
+        Ok(mut skillset) => {
             info!("Parsing OK");
             // Duplicate
-            match model.duplicate() {
+            match skillset.duplicate() {
                 Ok(_) => info!("Duplicate OK"),
                 Err(e) => {
                     error!("{}", e);
@@ -22,7 +22,7 @@ pub fn load_model(filename: &str) -> Result<Model, parser::RlError> {
                 }
             }
             // Resolve
-            match model.resolve() {
+            match skillset.resolve() {
                 Ok(_) => info!("Resolve OK"),
                 Err(e) => {
                     error!("{}", e);
@@ -30,7 +30,7 @@ pub fn load_model(filename: &str) -> Result<Model, parser::RlError> {
                 }
             }
             //
-            Ok(model)
+            Ok(skillset)
         }
         Err(e) => {
             error!("{}", e);
@@ -39,14 +39,14 @@ pub fn load_model(filename: &str) -> Result<Model, parser::RlError> {
     }
 }
 
-// pub fn check(model: &model::Model) -> bool {
-//     let errors = check_model(model);
+// pub fn check(skillset: &skillset::Model) -> bool {
+//     let errors = check_skillset(skillset);
 //     if errors.is_empty() {
 //         info!("Verification OK");
 //         true
 //     } else {
 //         for e in errors.iter() {
-//             error!("{}", e.to_lang(model));
+//             error!("{}", e.to_lang(skillset));
 //         }
 //         false
 //     }

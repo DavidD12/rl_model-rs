@@ -1,11 +1,11 @@
 use super::*;
 use crate::parser::Position;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
 pub struct TypeId(pub usize);
 impl Id for TypeId {
-    fn default() -> Self {
-        Self(0)
+    fn index(&self) -> usize {
+        self.0
     }
 }
 

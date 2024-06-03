@@ -1,4 +1,4 @@
-use crate::model::Model;
+use crate::model::Skillset;
 use crate::parser::error::*;
 use line_col::LineColLookup;
 use std::fs;
@@ -9,7 +9,7 @@ pub struct Parser {
     current: Option<String>,
     todo: Vec<String>,
     done: Vec<String>,
-    pub model: Model,
+    pub skillset: Skillset,
 }
 
 impl Default for Parser {
@@ -18,7 +18,7 @@ impl Default for Parser {
             current: Default::default(),
             todo: Default::default(),
             done: Default::default(),
-            model: Default::default(),
+            skillset: Default::default(),
         }
     }
 }
@@ -29,7 +29,7 @@ impl Parser {
             current: None,
             todo: vec![file.into()],
             done: vec![],
-            model: Default::default(),
+            skillset: Default::default(),
         }
     }
 
@@ -91,7 +91,7 @@ impl Parser {
                 Some(file) => match fs::read_to_string(&file) {
                     Ok(input) => {
                         let lookup = LineColLookup::new(&input);
-                        match grammar::ModelParser::new().parse(&lookup, self, &input) {
+                        match grammar::SkillsetParser::new().parse(&lookup, self, &input) {
                             Ok(_) => {}
                             Err(e) => return Err(RlError::new_parse(&file, &lookup, e)),
                         }

@@ -57,11 +57,11 @@ impl Effect {
 }
 
 impl ToLang for Effect {
-    fn to_lang(&self, model: &Model) -> String {
+    fn to_lang(&self, skillset: &Skillset) -> String {
         format!(
             "{} -> {}",
-            self.resource.to_lang(model),
-            self.state.to_lang(model)
+            self.resource.to_lang(skillset),
+            self.state.to_lang(skillset)
         )
     }
 }

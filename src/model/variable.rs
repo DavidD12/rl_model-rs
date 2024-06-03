@@ -59,8 +59,8 @@ impl Variable {
 }
 
 impl ToLang for Variable {
-    fn to_lang(&self, model: &Model) -> String {
-        format!("{}: {}", self.name, self.rl_type.to_lang(model))
+    fn to_lang(&self, skillset: &Skillset) -> String {
+        format!("{}: {}", self.name, self.rl_type.to_lang(skillset))
     }
 }
 
