@@ -91,6 +91,25 @@ impl Resource {
         self.transitions = transitions;
     }
 
+    pub fn transitions_list(&self) -> Vec<Transition> {
+        match self.transitions() {
+            Transitions::All => {
+                let mut transitions = vec![];
+                for src in self.states.iter() {
+                    let r_src = Reference::Resolved(src.id());
+                    for dst in self.states.iter() {
+                        let r_dst = Reference::Resolved(dst.id());
+                        if src.id() != dst.id() {
+                            transitions.push(Transition::new(r_src.clone(), r_dst.clone()));
+                        }
+                    }
+                }
+                transitions
+            }
+            Transitions::List(transitions) => transitions.clone(),
+        }
+    }
+
     //---------- Duplicate ----------
 
     pub fn names(&self) -> Vec<(String, Option<Position>)> {
